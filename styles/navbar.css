@@ -1,0 +1,455 @@
+/* =====================================================
+   BARANGAY EQUIAID — Navbar Styles
+   Include on EVERY page alongside global.css
+   ===================================================== */
+
+/* ─── NAVBAR WRAPPER ─────────────────────────────────── */
+#navbar {
+  position: sticky;
+  top: 0;
+  z-index: 10000;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-light);
+  transition: box-shadow var(--transition);
+}
+
+#navbar.scrolled {
+  box-shadow: var(--shadow-md);
+}
+
+/* ─── INNER ROW ──────────────────────────────────────── */
+.nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+}
+
+/* ─── BRAND ──────────────────────────────────────────── */
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.nav-logo-mark {
+  width: 36px;
+  height: 36px;
+  background: var(--navy);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 400;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+.nav-brand-sub {
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--slate-mid);
+  line-height: 1;
+}
+
+.nav-brand-name {
+  font-size: 17px;
+  color: var(--navy);
+  line-height: 1.1;
+}
+
+/* ─── DESKTOP LINKS ──────────────────────────────────── */
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.nav-links a {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--slate);
+  padding: 6px 10px;
+  border-radius: var(--radius);
+  transition: all var(--transition);
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-links a i {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+  color: var(--navy);
+  background: var(--bg-subtle);
+}
+
+/* Login Button */
+.nav-links .btn-nav-login {
+  margin-left: 8px;
+  padding: 7px 16px;
+  background: var(--navy);
+  color: #fff !important;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 500;
+  transition: all var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-links .btn-nav-login i {
+  font-size: 12px;
+  opacity: 1;
+}
+
+.nav-links .btn-nav-login:hover {
+  background: var(--navy-mid);
+  color: #fff !important;
+}
+
+/* ─── HAMBURGER ──────────────────────────────────────── */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: var(--radius);
+  transition: background var(--transition);
+  background: none;
+  border: none;
+}
+
+.hamburger:hover { background: var(--bg-subtle); }
+
+.hamburger span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--navy);
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* ─── MOBILE MENU ────────────────────────────────────── */
+.mobile-menu {
+  display: none;
+  flex-direction: column;
+  background: var(--bg-white);
+  border-top: 1px solid var(--border-light);
+  padding: 8px 0 16px;
+}
+
+.mobile-menu.open { display: flex; }
+
+.mobile-menu a {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--slate);
+  padding: 10px 24px;
+  transition: all var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mobile-menu a i {
+  font-size: 14px;
+  width: 18px;
+  text-align: center;
+  color: var(--slate-mid);
+}
+
+.mobile-menu a:hover,
+.mobile-menu a.active {
+  color: var(--navy);
+  background: var(--bg-subtle);
+}
+.mobile-menu a:hover i,
+.mobile-menu a.active i {
+  color: var(--navy);
+}
+
+.mobile-menu .btn-nav-login {
+  margin: 8px 24px 0;
+  padding: 11px 18px;
+  background: var(--navy);
+  color: #fff !important;
+  border-radius: var(--radius);
+  text-align: center;
+  justify-content: center;
+}
+
+.mobile-menu .btn-nav-login i { color: #fff !important; }
+
+/* ─── RESPONSIVE ─────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .nav-links a { padding: 6px 8px; font-size: 12.5px; }
+}
+
+@media (max-width: 768px) {
+  .nav-links  { display: none; }
+  .hamburger  { display: flex; }
+}
+
+.btn-nav-login.active {
+  background: var(--slate) !important;
+  color: #fff !important;
+}
+
+
+/* =====================================================
+   PROFILE AVATAR + DROPDOWN
+   Appended — no existing rules were changed above.
+   ===================================================== */
+
+/* ─── Wrapper (sits inside .nav-links like a flex item) ── */
+.nav-profile {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-left: 8px;  /* same spacing as .btn-nav-login */
+}
+
+/* ─── Avatar trigger button ───────────────────────────── */
+.nav-avatar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1.5px solid var(--border);
+  border-radius: 100px;
+  padding: 4px 10px 4px 4px;
+  cursor: pointer;
+  transition: all var(--transition);
+  outline: none;
+}
+
+.nav-avatar-btn:hover,
+.nav-avatar-btn:focus-visible {
+  border-color: var(--navy);
+  background: var(--bg-subtle);
+}
+
+.nav-avatar-btn[aria-expanded="true"] {
+  border-color: var(--navy);
+  background: var(--bg-subtle);
+}
+
+.nav-avatar-btn[aria-expanded="true"] .nav-avatar-caret {
+  transform: rotate(180deg);
+}
+
+/* ─── Circle initials ─────────────────────────────────── */
+.nav-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--navy);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+/* ─── Chevron ─────────────────────────────────────────── */
+.nav-avatar-caret {
+  font-size: 9px;
+  color: var(--slate-mid);
+  transition: transform var(--transition);
+}
+
+/* ─── Dropdown panel ──────────────────────────────────── */
+.nav-profile-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 232px;
+  background: var(--bg-white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  z-index: 1100;
+  overflow: hidden;
+
+  /* Entrance animation */
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  pointer-events: none;
+}
+
+.nav-profile-dropdown.is-open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* ─── Header: avatar + name + role ───────────────────── */
+.npd-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px 12px;
+}
+
+.npd-avatar-lg {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--navy);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.npd-info { overflow: hidden; }
+
+.npd-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.npd-role-badge {
+  display: inline-block;
+  margin-top: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--slate-mid);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  padding: 2px 8px;
+  border-radius: 100px;
+}
+
+/* ─── Divider ─────────────────────────────────────────── */
+.npd-divider {
+  height: 1px;
+  background: var(--border-light);
+  margin: 2px 0;
+}
+
+/* ─── Menu item ───────────────────────────────────────── */
+.npd-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-mid);
+  text-decoration: none;
+  transition: all var(--transition);
+}
+
+.npd-item i {
+  width: 15px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--slate-mid);
+  flex-shrink: 0;
+  transition: color var(--transition);
+}
+
+.npd-item:hover {
+  background: var(--bg-subtle);
+  color: var(--navy);
+}
+
+.npd-item:hover i { color: var(--navy); }
+
+/* Admin variant */
+.npd-item--admin       { color: var(--navy-light); }
+.npd-item--admin i     { color: var(--navy-light); }
+.npd-item--admin:hover { background: rgba(42, 74, 138, 0.06); color: var(--navy); }
+
+/* Danger / logout variant */
+.npd-item--danger       { color: #b91c1c; }
+.npd-item--danger i     { color: #b91c1c; }
+.npd-item--danger:hover { background: rgba(185, 28, 28, 0.06); color: #991b1b; }
+
+
+/* =====================================================
+   MOBILE MENU — logged-in user identity block
+   ===================================================== */
+.mobile-user-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  border-top: 1px solid var(--border-light);
+  margin-top: 6px;
+}
+
+.mobile-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--navy);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.mobile-user-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-dark);
+  line-height: 1.3;
+}
+
+.mobile-user-role {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--slate-mid);
+  margin-top: 2px;
+}
+
+/* Logout link in mobile menu — inherits .mobile-menu a styles */
+.mobile-logout-link { color: #b91c1c !important; }
+.mobile-logout-link i { color: #b91c1c !important; }
+.mobile-logout-link:hover {
+  background: rgba(185, 28, 28, 0.06) !important;
+  color: #991b1b !important;
+}

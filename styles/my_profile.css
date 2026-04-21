@@ -1,0 +1,586 @@
+/* =====================================================
+   BARANGAY EQUIAID — my_profile.css
+   Styles for public/my_profile.php
+   Requires: global.css + navbar.css + footer.css
+   ===================================================== */
+
+/* ─── SKELETON ───────────────────────────────────────── */
+@keyframes sk-shimmer {
+    0%   { background-position: -600px 0; }
+    100% { background-position:  600px 0; }
+}
+
+.sk-loading {
+    background: linear-gradient(90deg, var(--bg-subtle) 25%, var(--border-light) 50%, var(--bg-subtle) 75%);
+    background-size: 1200px 100%;
+    animation: sk-shimmer 1.6s infinite linear;
+    border-radius: var(--radius);
+    color: transparent !important;
+    pointer-events: none;
+    display: block;
+}
+
+/* ─── PAGE HEADER ────────────────────────────────────── */
+.mp-header {
+    background: var(--bg-white);
+    border-bottom: 1px solid var(--border-light);
+    padding: 48px 0 0;
+}
+
+.mp-header-inner {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 32px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+}
+
+.mp-page-title { margin-bottom: 8px; }
+.mp-page-sub {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+/* ─── AVATAR HERO ────────────────────────────────────── */
+.mp-hero {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 28px 0 36px;
+    flex-wrap: wrap;
+}
+
+.mp-avatar-wrap {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.mp-avatar {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    background: var(--navy);
+    color: #fff;
+    font-size: 30px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: 0.02em;
+    user-select: none;
+    border: 3px solid var(--bg-white);
+    box-shadow: 0 0 0 2px var(--navy), var(--shadow-md);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.mp-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+
+.mp-hero-info { flex: 1; min-width: 0; }
+
+.mp-hero-name {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1.2;
+    margin-bottom: 8px;
+}
+
+.mp-hero-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* ─── ROLE + STATUS BADGES ────────────────────────────── */
+.mp-role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 100px;
+    white-space: nowrap;
+}
+
+.mp-role-badge--resident    { background: #f0f4ff; color: #1e3a8a; border: 1px solid rgba(29,78,216,.2); }
+.mp-role-badge--admin       { background: #fef3c7; color: #92400e; border: 1px solid rgba(217,119,6,.2); }
+.mp-role-badge--superadmin  { background: #1e3a8a; color: #fff;    border: 1px solid transparent; }
+.mp-role-badge--staff       { background: #f0fdf4; color: #166534; border: 1px solid rgba(22,163,74,.2); }
+.mp-role-badge--dswd_officer{ background: #fdf4ff; color: #6b21a8; border: 1px solid rgba(107,33,168,.2); }
+.mp-role-badge--labeler     { background: var(--bg-subtle); color: var(--slate); border: 1px solid var(--border-light); }
+
+.mp-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 100px;
+}
+
+.mp-status-badge--active   { background: #f0fdf4; color: #166534; border: 1px solid rgba(22,163,74,.25); }
+.mp-status-badge--inactive { background: #fff1f2; color: #9f1239; border: 1px solid rgba(159,18,57,.2); }
+
+.mp-status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+}
+
+/* ─── STAT STRIP ─────────────────────────────────────── */
+.mp-stat-strip {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    padding-left: 2px;
+}
+
+.mp-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.mp-stat-val {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1;
+}
+
+.mp-stat-lbl {
+    font-size: 10.5px;
+    font-weight: 500;
+    color: var(--slate-mid);
+    letter-spacing: 0.04em;
+}
+
+/* ─── CONTENT GRID ───────────────────────────────────── */
+.mp-content {
+    background: var(--bg);
+    padding: 36px 0 80px;
+}
+
+.mp-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 24px;
+    align-items: start;
+}
+
+/* ─── CARD ────────────────────────────────────────────── */
+.mp-card {
+    background: var(--bg-white);
+    border: 1.5px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.mp-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border-light);
+    gap: 12px;
+}
+
+.mp-card-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--navy);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mp-card-title i {
+    font-size: 13px;
+    color: var(--slate-mid);
+}
+
+.mp-card-body { padding: 22px; }
+
+/* ─── FORM FIELDS ────────────────────────────────────── */
+.mp-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 18px;
+}
+
+.mp-field:last-of-type { margin-bottom: 0; }
+
+.mp-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--slate-mid);
+}
+
+.mp-label .mp-required { color: #dc2626; margin-left: 2px; }
+
+.mp-input {
+    width: 100%;
+    padding: 9px 13px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    font-family: var(--font-sans);
+    font-size: 13.5px;
+    color: var(--text-dark);
+    background: var(--bg-white);
+    outline: none;
+    transition: border-color var(--transition), box-shadow var(--transition);
+    height: 40px;
+    box-sizing: border-box;
+}
+
+.mp-input:focus {
+    border-color: var(--navy);
+    box-shadow: 0 0 0 3px rgba(15,31,61,.08);
+}
+
+.mp-input:disabled,
+.mp-input[readonly] {
+    background: var(--bg-subtle);
+    color: var(--slate-mid);
+    cursor: not-allowed;
+    border-color: var(--border-light);
+}
+
+.mp-input::placeholder { color: var(--slate-light); }
+
+.mp-field-hint {
+    font-size: 11px;
+    color: var(--slate-light);
+    line-height: 1.45;
+}
+
+.mp-field-error {
+    font-size: 11.5px;
+    color: #dc2626;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.mp-field-error[hidden] { display: none; }
+
+/* Password toggle wrapper */
+.mp-pw-wrap {
+    position: relative;
+}
+
+.mp-pw-wrap .mp-input {
+    padding-right: 40px;
+}
+
+.mp-pw-toggle {
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 40px;
+    width: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--slate-mid);
+    font-size: 12px;
+    transition: color var(--transition);
+    padding: 0;
+}
+
+.mp-pw-toggle:hover { color: var(--navy); }
+
+/* Password strength bar */
+.mp-pw-strength {
+    display: flex;
+    gap: 4px;
+    margin-top: 6px;
+}
+
+.mp-pw-strength[hidden] { display: none; }
+
+.mp-pw-bar {
+    flex: 1;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--border-light);
+    transition: background 0.3s ease;
+}
+
+.mp-pw-bar.is-filled-weak   { background: #dc2626; }
+.mp-pw-bar.is-filled-fair   { background: #d97706; }
+.mp-pw-bar.is-filled-good   { background: #2563eb; }
+.mp-pw-bar.is-filled-strong { background: #16a34a; }
+
+.mp-pw-strength-label {
+    font-size: 10.5px;
+    color: var(--slate-light);
+    margin-top: 4px;
+}
+
+.mp-pw-strength-label.weak   { color: #dc2626; }
+.mp-pw-strength-label.fair   { color: #d97706; }
+.mp-pw-strength-label.good   { color: #2563eb; }
+.mp-pw-strength-label.strong { color: #16a34a; }
+
+/* ─── FORM ACTION FOOTER ─────────────────────────────── */
+.mp-form-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-light);
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+/* ─── BUTTONS ────────────────────────────────────────── */
+.mp-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 18px;
+    border-radius: var(--radius);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition);
+    border: 1.5px solid transparent;
+    white-space: nowrap;
+    height: 38px;
+}
+
+.mp-btn i { font-size: 12px; }
+
+.mp-btn--primary {
+    background: var(--navy);
+    color: #fff;
+    border-color: var(--navy);
+}
+
+.mp-btn--primary:hover { background: var(--navy-mid); border-color: var(--navy-mid); }
+
+.mp-btn--secondary {
+    background: var(--bg-subtle);
+    color: var(--slate);
+    border-color: var(--border);
+}
+
+.mp-btn--secondary:hover { background: var(--border-light); color: var(--navy); border-color: var(--border); }
+
+.mp-btn--danger {
+    background: #fff1f2;
+    color: #b91c1c;
+    border-color: rgba(185,28,28,.2);
+}
+
+.mp-btn--danger:hover { background: #ffe4e6; border-color: rgba(185,28,28,.4); }
+
+.mp-btn--ghost {
+    background: transparent;
+    color: var(--slate-mid);
+    border-color: transparent;
+}
+
+.mp-btn--ghost:hover { color: var(--navy); background: var(--bg-subtle); }
+
+.mp-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.mp-btn--loading .mp-btn-spinner {
+    display: inline-block;
+    width: 13px;
+    height: 13px;
+    border: 2px solid rgba(255,255,255,.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: mpSpin 0.65s linear infinite;
+    flex-shrink: 0;
+}
+
+.mp-btn--secondary.mp-btn--loading .mp-btn-spinner {
+    border-color: rgba(15,31,61,.15);
+    border-top-color: var(--navy);
+}
+
+.mp-btn-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-white);
+    color: var(--slate);
+    font-family: var(--font-sans);
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+    height: 34px;
+}
+
+.mp-btn-icon-btn:hover { border-color: var(--navy); color: var(--navy); background: var(--bg-subtle); }
+.mp-btn-icon-btn i { font-size: 11px; }
+
+@keyframes mpSpin { to { transform: rotate(360deg); } }
+
+/* ─── ACCOUNT INFO CARD (right column) ───────────────── */
+.mp-info-row {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.mp-info-row:last-child { border-bottom: none; padding-bottom: 0; }
+.mp-info-row:first-child { padding-top: 0; }
+
+.mp-info-lbl {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--slate-light);
+}
+
+.mp-info-val {
+    font-size: 13.5px;
+    color: var(--text-dark);
+    font-weight: 500;
+    word-break: break-all;
+}
+
+.mp-info-val--muted { color: var(--slate-mid); font-weight: 400; }
+
+/* ─── TOAST NOTIFICATIONS ────────────────────────────── */
+.mp-toast-wrap {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 20000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+
+@keyframes mpToastIn {
+    from { opacity: 0; transform: translateX(20px) scale(0.95); }
+    to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes mpToastOut {
+    from { opacity: 1; transform: translateX(0) scale(1); }
+    to   { opacity: 0; transform: translateX(20px) scale(0.9); }
+}
+
+.mp-toast {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg-white);
+    border: 1.5px solid var(--border-light);
+    border-left-width: 4px;
+    border-radius: var(--radius-lg);
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-dark);
+    box-shadow: var(--shadow-lg);
+    max-width: 320px;
+    pointer-events: auto;
+    animation: mpToastIn 0.25s ease both;
+}
+
+.mp-toast.is-exiting { animation: mpToastOut 0.22s ease forwards; }
+
+.mp-toast--success { border-left-color: #16a34a; }
+.mp-toast--error   { border-left-color: #dc2626; }
+.mp-toast--info    { border-left-color: var(--navy); }
+
+.mp-toast-icon { font-size: 14px; flex-shrink: 0; }
+.mp-toast--success .mp-toast-icon { color: #16a34a; }
+.mp-toast--error   .mp-toast-icon { color: #dc2626; }
+.mp-toast--info    .mp-toast-icon { color: var(--navy); }
+
+.mp-toast-msg { flex: 1; line-height: 1.4; }
+
+/* ─── SECTION DIVIDER ────────────────────────────────── */
+.mp-section-sep {
+    height: 1px;
+    background: var(--border-light);
+    margin: 24px 0;
+}
+
+/* ─── DANGER ZONE (change password) ──────────────────── */
+.mp-danger-card { border-color: rgba(220,38,38,.2); }
+
+.mp-danger-card .mp-card-head { border-bottom-color: rgba(220,38,38,.15); background: rgba(220,38,38,.02); }
+
+.mp-danger-card .mp-card-title { color: #b91c1c; }
+.mp-danger-card .mp-card-title i { color: #b91c1c; }
+
+/* ─── COLLAPSIBLE PASSWORD FORM ──────────────────────── */
+#mpPwFormWrap {
+    overflow: hidden;
+    transition: max-height 0.32s cubic-bezier(.4,0,.2,1), opacity 0.25s ease;
+    max-height: 0;
+    opacity: 0;
+}
+
+#mpPwFormWrap.is-open {
+    max-height: 700px;
+    opacity: 1;
+}
+
+
+/* ─── RESPONSIVE ─────────────────────────────────────── */
+@media (max-width: 1024px) {
+    .mp-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+    .mp-header-inner  { flex-direction: column; gap: 16px; }
+    .mp-hero          { gap: 16px; }
+    .mp-hero-name     { font-size: 20px; }
+    .mp-avatar        { width: 72px; height: 72px; font-size: 24px; }
+    .mp-form-actions  { justify-content: stretch; }
+    .mp-btn           { flex: 1; justify-content: center; }
+    .mp-toast-wrap    { right: 12px; left: 12px; }
+    .mp-toast         { max-width: 100%; }
+}
+
+@media (max-width: 480px) {
+    .mp-hero { padding: 20px 0 28px; }
+    .mp-stat-strip { gap: 16px; }
+}

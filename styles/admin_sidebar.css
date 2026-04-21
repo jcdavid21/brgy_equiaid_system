@@ -1,0 +1,411 @@
+/*
+ * admin/style.css — Barangay EQUIAID Admin Sidebar Styles
+ * Follows the design language from global.css / home.css
+ * Pure CSS — no frameworks.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
+
+/* ─── CSS TOKENS (mirrors global.css) ──────────────── */
+:root {
+  --navy:          #0f1f3d;
+  --navy-mid:      #1a3160;
+  --navy-light:    #2a4a8a;
+  --slate:         #4a5568;
+  --slate-mid:     #6b7280;
+  --slate-light:   #9ca3af;
+  --border:        #d1d5db;
+  --border-light:  #e5e7eb;
+  --bg:            #f9fafb;
+  --bg-white:      #ffffff;
+  --bg-subtle:     #f3f4f6;
+  --text-dark:     #111827;
+  --text-mid:      #374151;
+  --text-muted:    #6b7280;
+
+  /* Sidebar-specific */
+  --sidebar-width-expanded:  240px;
+  --sidebar-width-collapsed:  72px;
+  --sidebar-bg:              #0f1f3d;   /* navy */
+  --sidebar-surface:         #1a3160;   /* navy-mid — for active/hover */
+  --sidebar-border:          rgba(255,255,255,0.07);
+  --sidebar-text:            rgba(255,255,255,0.72);
+  --sidebar-text-active:     #ffffff;
+  --sidebar-icon-color:      rgba(255,255,255,0.5);
+  --sidebar-icon-active:     #ffffff;
+  --sidebar-active-accent:   #ffffff;   /* thin left-edge bar */
+  --sidebar-hover-bg:        rgba(255,255,255,0.06);
+  --sidebar-active-bg:       rgba(255,255,255,0.10);
+
+  --transition:              0.22s ease;
+  --font-serif:              'DM Serif Display', Georgia, serif;
+  --font-sans:               'DM Sans', system-ui, sans-serif;
+}
+
+/* ─── RESET ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+a  { text-decoration: none; color: inherit; }
+ul { list-style: none; }
+button { cursor: pointer; background: none; border: none; }
+
+/* ─── PAGE SHELL ─────────────────────────────────────── */
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text-dark);
+  -webkit-font-smoothing: antialiased;
+}
+
+.admin-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ═══════════════════════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════════════════════ */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: var(--sidebar-width-expanded);
+  background: var(--sidebar-bg);
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  overflow: hidden;
+  transition: width var(--transition);
+  border-right: 1px solid var(--sidebar-border);
+
+  /* Subtle inner highlight on right edge */
+  box-shadow: 1px 0 0 0 rgba(255,255,255,0.04), 4px 0 24px rgba(0,0,0,0.18);
+}
+
+/* ── Collapsed state ───────────────────────────────── */
+.sidebar.collapsed {
+  width: var(--sidebar-width-collapsed);
+}
+
+/* ── Toggle button ─────────────────────────────────── */
+.toggle-btn {
+  position: absolute;
+  top: 18px;
+  right: 14px;
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.45);
+  transition: color var(--transition), background var(--transition);
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.toggle-btn:hover {
+  color: #fff;
+  background: rgba(255,255,255,0.09);
+}
+
+.toggle-btn i {
+  font-size: 15px;
+  transition: transform var(--transition);
+}
+
+.sidebar.collapsed .toggle-btn i {
+  transform: rotate(90deg);
+}
+
+/* ── Header (logo + brand) ─────────────────────────── */
+.sidebar-header {
+  padding: 22px 18px 18px 20px;
+  flex-shrink: 0;
+}
+
+.logo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  overflow: hidden;
+}
+
+.logo-placeholder {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  background: rgba(255,255,255,0.08);
+  border: 1.5px solid rgba(255,255,255,0.14);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.75);
+  transition: background var(--transition), border-color var(--transition);
+}
+
+.logo-placeholder i { font-size: 16px; }
+
+.logo-placeholder:hover {
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(255,255,255,0.22);
+}
+
+.brand-text {
+  overflow: hidden;
+  white-space: nowrap;
+  transition: opacity var(--transition), width var(--transition);
+}
+
+.brand-name {
+  display: block;
+  font-size: 16px;
+  font-weight: 400;
+  color: #fff;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+}
+
+.brand-sub {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.38);
+  margin-top: 2px;
+}
+
+/* Hide brand text when collapsed */
+.sidebar.collapsed .brand-text {
+  opacity: 0;
+  width: 0;
+  pointer-events: none;
+}
+
+/* ── Divider ────────────────────────────────────────── */
+.sidebar-divider {
+  height: 1px;
+  background: var(--sidebar-border);
+  margin: 0 16px;
+  flex-shrink: 0;
+}
+
+/* ── Navigation list ────────────────────────────────── */
+.sidebar-nav {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 10px 10px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar      { width: 4px; }
+.sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+.nav-list { display: flex; flex-direction: column; gap: 2px; }
+
+/* ── Nav link ───────────────────────────────────────── */
+.nav-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 11px;
+  border-radius: 8px;
+  color: var(--sidebar-text);
+  transition: background var(--transition), color var(--transition);
+  white-space: nowrap;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.nav-link:hover {
+  background: var(--sidebar-hover-bg);
+  color: #fff;
+}
+
+.nav-link:hover .nav-icon i {
+  color: #fff;
+}
+
+/* Active state */
+.nav-link.active {
+  background: var(--sidebar-active-bg);
+  color: var(--sidebar-text-active);
+}
+
+.nav-link.active .nav-icon i {
+  color: var(--sidebar-icon-active);
+}
+
+/* Active left-edge accent bar */
+.active-indicator {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 18px;
+  background: #fff;
+  border-radius: 0 3px 3px 0;
+}
+
+/* Icon box */
+.nav-icon {
+  width: 20px;
+  min-width: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.nav-icon i {
+  font-size: 14px;
+  color: var(--sidebar-icon-color);
+  transition: color var(--transition);
+}
+
+/* Label */
+.nav-label {
+  font-size: 13.5px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  transition: opacity var(--transition), width var(--transition);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* Hide labels when collapsed */
+.sidebar.collapsed .nav-label {
+  opacity: 0;
+  width: 0;
+  pointer-events: none;
+}
+
+/* ── Footer (logout) ────────────────────────────────── */
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 8px 10px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.logout-link {
+  color: rgba(255,255,255,0.45);
+}
+
+.logout-link:hover {
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.85);
+}
+
+.logout-link .nav-icon i {
+  color: rgba(255,255,255,0.38);
+}
+
+.logout-link:hover .nav-icon i {
+  color: rgba(255,255,255,0.75);
+}
+
+/* Tooltip for collapsed icons */
+.sidebar.collapsed .nav-link::after {
+  content: attr(title);
+  position: absolute;
+  left: calc(var(--sidebar-width-collapsed) + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--navy-mid);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  z-index: 9999;
+}
+
+.sidebar.collapsed .nav-link:hover::after {
+  opacity: 1;
+}
+
+/* ═══════════════════════════════════════════════════════
+   MAIN CONTENT AREA
+═══════════════════════════════════════════════════════ */
+.main-content {
+  margin-left: var(--sidebar-width-expanded);
+  flex: 1;
+  min-width: 0;
+  min-height: 100vh;
+  transition: margin-left var(--transition);
+  padding: 40px 40px;
+  background: var(--bg);
+  overflow-x: hidden;
+}
+
+/* Shift content when sidebar collapses */
+.admin-shell.sidebar-collapsed .main-content {
+  margin-left: var(--sidebar-width-collapsed);
+}
+
+/* ── Page header inside main content ─────────────────── */
+.page-header {
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.page-header-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--slate-mid);
+  margin-bottom: 6px;
+}
+
+.page-header-title {
+  font-size: clamp(24px, 3vw, 36px);
+  font-weight: 400;
+  color: var(--navy);
+  line-height: 1.2;
+}
+
+/* ─── RESPONSIVE ─────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: var(--sidebar-width-collapsed);
+  }
+
+  .brand-text,
+  .nav-label {
+    opacity: 0;
+    width: 0;
+    pointer-events: none;
+  }
+
+  .main-content {
+    margin-left: var(--sidebar-width-collapsed);
+    padding: 28px 24px;
+  }
+}
+
+@media (max-width: 640px) {
+  .sidebar {
+    width: var(--sidebar-width-collapsed);
+  }
+
+  .main-content {
+    margin-left: var(--sidebar-width-collapsed);
+    padding: 20px 16px;
+  }
+}

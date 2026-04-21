@@ -1,0 +1,36 @@
+[20:47:26] [SYSTEM] EQUIAID Welfare Classifier Training
+[20:47:26] [SYSTEM] Model    : RF
+[20:47:26] [SYSTEM] Epochs   : 20
+[20:47:26] [SYSTEM] LR       : 0.001
+[20:47:26] [SYSTEM] Val Split: 20%
+[20:47:26] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[20:47:26] [SYSTEM] Algorithm: Random Forest
+[20:47:26] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[20:47:26] [INFO] Fetching street demographic features from database…
+[20:47:27] [DATA] 201 records loaded.  train=161  val=40
+[20:47:27] [INFO] Features: flood_frequency, poverty_rate_pct, pwd_count,
+[20:47:27] [INFO]           senior_count, fourps_households, informal_settlers_pct, vuln_score
+[20:47:27] [INFO] Initialising Random Forest pipeline (StandardScaler + classifier)…
+[20:47:27] Epoch  1/20  [██░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   5.0%  ETA: 57s
+[20:47:27] loss: 1.1257  acc: 15.36%  val_loss: 1.1704  val_acc: 14.52%
+[20:47:27] [INFO] First epoch complete — model warming up.
+[20:47:30] Epoch  2/20  [███░░░░░░░░░░░░░░░░░░░░░░░░░░░]  10.0%  ETA: 54s
+[20:47:30] loss: 1.1488  acc: 15.85%  val_loss: 1.1840  val_acc: 13.60%
+[20:47:33] Epoch  3/20  [█████░░░░░░░░░░░░░░░░░░░░░░░░░]  15.0%  ETA: 51s
+[20:47:34] loss: 1.1142  acc: 16.40%  val_loss: 1.1734  val_acc: 13.31%
+[20:47:36] Epoch  4/20  [██████░░░░░░░░░░░░░░░░░░░░░░░░]  20.0%  ETA: 48s
+[20:47:36] loss: 1.1382  acc: 15.76%  val_loss: 1.1856  val_acc: 13.44%
+[20:47:40] Epoch  5/20  [████████░░░░░░░░░░░░░░░░░░░░░░]  25.0%  ETA: 45s
+[20:47:40] loss: 1.1345  acc: 15.87%  val_loss: 1.1666  val_acc: 13.32%
+[20:47:40] [INFO] 25% complete — loss trending down.
+[20:47:43] Epoch  6/20  [█████████░░░░░░░░░░░░░░░░░░░░░]  30.0%  ETA: 42s
+[20:47:43] loss: 1.1422  acc: 17.13%  val_loss: 1.1937  val_acc: 16.59%
+[20:47:46] loss: 1.1156  acc: 16.00%  val_loss: 1.1656  val_acc: 15.26%
+[20:47:46] Epoch  7/20  [███████████░░░░░░░░░░░░░░░░░░░]  35.0%  ETA: 39s
+[20:47:49] Epoch  8/20  [████████████░░░░░░░░░░░░░░░░░░]  40.0%  ETA: 36s
+[20:47:49] loss: 1.1185  acc: 15.71%  val_loss: 1.1722  val_acc: 15.13%
+[20:47:52] Epoch  9/20  [██████████████░░░░░░░░░░░░░░░░]  45.0%  ETA: 33s
+[20:47:52] loss: 1.1158  acc: 15.92%  val_loss: 1.1811  val_acc: 12.68%
+[20:47:55] Epoch 10/20  [███████████████░░░░░░░░░░░░░░░]  50.0%  ETA: 30s
+[20:47:55] loss: 1.1146  acc: 16.27%  val_loss: 1.1776  val_acc: 14.71%
+[20:47:55] [INFO] Halfway — best val_acc so far: 16.59%
