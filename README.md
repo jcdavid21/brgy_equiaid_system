@@ -116,6 +116,10 @@ mysql -u root
    ```bash
    pip install --upgrade pip
    pip install flask flask-cors numpy opencv-python tensorflow keras ultralytics pandas
+   ```
+
+   Or if a `requirements.txt` exists:
+
    ```bash
    pip install -r requirements.txt
    ```
@@ -147,6 +151,28 @@ models/
 ```
 
 > **Note**: These are pre-trained models. If missing, they need to be generated or provided separately.
+
+**Important: Download `cnn_resnet50.keras` from Google Drive**
+
+1. Open this Google Drive folder:
+   - https://drive.google.com/drive/u/0/folders/1oNMKVStQWfW-2rBt44vHSJ9Xy5N-Qxwo
+
+2. Download the file named `cnn_resnet50.keras`.
+
+3. Move the downloaded file into this folder:
+   - `models/flood_models/`
+
+4. Example command (macOS/Linux):
+   ```bash
+   mv ~/Downloads/cnn_resnet50.keras /Applications/XAMPP/xamppfiles/htdocs/BrgyEquiaidSystem/models/flood_models/
+   ```
+
+5. Verify the file exists in the correct path:
+   ```bash
+   ls -la /Applications/XAMPP/xamppfiles/htdocs/BrgyEquiaidSystem/models/flood_models/
+   ```
+
+Without `cnn_resnet50.keras`, the flood prediction endpoint will not work correctly.
 
 ## ⚙️ Configuration
 
