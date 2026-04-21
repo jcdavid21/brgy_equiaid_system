@@ -116,9 +116,6 @@ mysql -u root
    ```bash
    pip install --upgrade pip
    pip install flask flask-cors numpy opencv-python tensorflow keras ultralytics pandas
-   ```
-
-   Or if a `requirements.txt` exists:
    ```bash
    pip install -r requirements.txt
    ```
@@ -154,8 +151,6 @@ models/
 ## ⚙️ Configuration
 
 ### 1. Database Configuration
-
-Edit [backend/db.php](backend/db.php):
 
 ```php
 define('DB_HOST', 'localhost');
@@ -228,30 +223,10 @@ The Flask API should start on `http://localhost:5000`
 Open your browser and navigate to:
 
 ```
-http://localhost/BrgyEquiaidSystem/
-```
-
-**Default Credentials** (if using sample data):
-- Contact system administrator for initial credentials
-- First-time setup may require creating an admin account
-
 ## 📁 Project Structure
 
-```
-BrgyEquiaidSystem/
-├── index.php                 # Main entry point (redirects to components)
-├── predict_api.py           # Flask API for ML predictions
-│
-├── components/              # Frontend pages
-│   ├── index.php           # Home page
-│   ├── login.php           # Login page
 │   ├── announcements.php   # Announcements
 │   ├── assistance.php      # Aid requests
-│   ├── disaster_map.php    # Real-time disaster map
-│   ├── my_reports.php      # User's reports
-│   ├── my_profile.php      # User profile
-│   ├── navbar.php          # Navigation bar
-│   ├── footer.php          # Footer
 │   └── street_status.php   # Street monitoring
 │
 ├── admin/                   # Admin dashboard pages
@@ -259,15 +234,10 @@ BrgyEquiaidSystem/
 │   ├── user-management.php # User management
 │   ├── resource-allocation.php
 │   ├── prediction_analytics.php
-│   ├── street_monitoring.php
-│   ├── typhoon-impact.php
 │   ├── welfare-action.php
 │   ├── activity-logs.php
-│   ├── resident-reports.php
-│   └── sidebar.php
 │
 ├── backend/                 # Backend PHP logic
-│   ├── db.php              # Database connection
 │   ├── auth.php            # Authentication
 │   ├── home.php            # Home logic
 │   ├── report.php          # Report handling
@@ -335,11 +305,6 @@ BrgyEquiaidSystem/
 The Flask API provides endpoints for ML model predictions:
 
 ```
-POST http://localhost:5000/predict-flood
-- Input: Base64-encoded image
-- Output: Flood probability and predictions
-
-POST http://localhost:5000/predict-damage
 - Input: Base64-encoded image
 - Output: Damage severity classification
 
@@ -349,7 +314,6 @@ GET http://localhost:5000/health
 
 ## 🔧 Troubleshooting
 
-### Issue: "Cannot connect to database"
 **Solution**:
 1. Ensure MySQL is running: `mysql -u root -p`
 2. Check database name in [backend/db.php](backend/db.php)
