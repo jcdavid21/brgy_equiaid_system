@@ -474,8 +474,14 @@ def _write_log(line: str):
     print(entry, end='', flush=True)
 
 
+import logging as _logging
+
+_werkzeug_log = _logging.getLogger('werkzeug')
+
 @app.route('/train/stream_log', methods=['POST'])
 def stream_log():
+    _werkzeug_log.setLevel(_logging.ERROR)   # silence HTTP logs during training
+
     data  = request.get_json(force=True) or {}
     line  = (data.get('line') or '').strip()
     first = bool(data.get('first', False))
@@ -494,6 +500,12 @@ def stream_log():
         _write_log(line)
 
     return jsonify({'ok': True, 'log_file': _LOG_FILE})
+
+
+@app.route('/train/stream_log_end', methods=['POST'])
+def stream_log_end():
+    _werkzeug_log.setLevel(_logging.INFO)    # restore HTTP logs after training
+    return jsonify({'ok': True})
 
 
 def _tlog(msg: str, tag: str = 'INFO') -> None:

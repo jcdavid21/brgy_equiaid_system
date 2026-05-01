@@ -347,6 +347,7 @@ function setGeoState(state, msg) {
     }
 }
 
+// ── Geolocation (auto on page load) ──────────────────────
 async function captureLocation() {
     if (!navigator.geolocation) {
         setGeoState('err', 'Geolocation not supported by this browser.');
@@ -355,6 +356,9 @@ async function captureLocation() {
     setGeoState('detecting');
     fLat.value = '';
     fLng.value = '';
+
+    const GEO_MAX_RETRIES = 3;
+    const GEO_RETRY_DELAY = 1500; // ms between retries
 
     const onSuccess = async pos => {
         const lat = pos.coords.latitude.toFixed(6);
@@ -368,37 +372,38 @@ async function captureLocation() {
         geoAddress.textContent = addr || `${lat}, ${lng}`;
     };
 
-    const onError = err => {
-        // kCLErrorLocationUnknown = code 2 (POSITION_UNAVAILABLE)
-        // Retry once with low accuracy before showing an error
-        if (err.code === 2) {
-            navigator.geolocation.getCurrentPosition(
-                onSuccess,
-                finalErr => {
-                    const msgs = {
-                        1: 'Permission denied — please allow location access in your browser.',
-                        2: 'Position unavailable. Please tap Retry or enter your street manually.',
-                        3: 'Request timed out. Please try again.',
-                    };
-                    setGeoState('err', msgs[finalErr.code] || 'Could not get location.');
-                },
-                { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
-            );
-            return;
-        }
-        const msgs = {
-            1: 'Permission denied — please allow location access in your browser.',
-            2: 'Position unavailable. Please tap Retry or enter your street manually.',
-            3: 'Request timed out. Please try again.',
-        };
-        setGeoState('err', msgs[err.code] || 'Could not get location.');
+    const tryGeo = (attempt, highAccuracy) => {
+        navigator.geolocation.getCurrentPosition(
+            onSuccess,
+            err => {
+                // kCLErrorLocationUnknown = POSITION_UNAVAILABLE (code 2)
+                // Retry up to GEO_MAX_RETRIES times, then fall back to low accuracy
+                if (err.code === 2) {
+                    if (attempt < GEO_MAX_RETRIES) {
+                        setTimeout(() => tryGeo(attempt + 1, highAccuracy), GEO_RETRY_DELAY);
+                        return;
+                    }
+                    // After high-accuracy retries exhausted, try once with low accuracy
+                    if (highAccuracy) {
+                        setTimeout(() => tryGeo(0, false), GEO_RETRY_DELAY);
+                        return;
+                    }
+                }
+
+                const msgs = {
+                    1: 'Permission denied — please allow location access in your browser.',
+                    2: 'Position unavailable. Please tap Retry or enter your street manually.',
+                    3: 'Request timed out. Please try again.',
+                };
+                setGeoState('err', msgs[err.code] || 'Could not get location.');
+            },
+            highAccuracy
+                ? { enableHighAccuracy: true,  timeout: 10000, maximumAge: 30000 }
+                : { enableHighAccuracy: false, timeout: 12000, maximumAge: 60000 }
+        );
     };
 
-    navigator.geolocation.getCurrentPosition(
-        onSuccess,
-        onError,
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
-    );
+    tryGeo(0, true);
 }
 
 btnGeoRetry.addEventListener('click', captureLocation);

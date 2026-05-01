@@ -351,7 +351,7 @@ $user_name = htmlspecialchars($_SESSION['user_name'] ?? 'Resident', ENT_QUOTES);
     </div>
 
     <script src="../js/navbar.js"></script>
-    <script src="../js/report.js"></script>
+    <script src="../js/report.js" defer></script>
 </body>
 
 </html>

@@ -675,6 +675,12 @@
       if (_trainPollInt) clearInterval(_trainPollInt);
       termLog('[STOP] Training stopped by user.', 'pa-log-warn');
       setTrainStatus('idle');
+      _trainAbort = true;
+      if (_trainPollInt) clearInterval(_trainPollInt);
+      termLog('[STOP] Training stopped by user.', 'pa-log-warn');
+      setTrainStatus('idle');
+      fetch('http://localhost:5001/train/stream_log_end', { method: 'POST' }).catch(function () {}); // ← add this line
+      setProgress(0);
       setProgress(0);
       startBtn.disabled  = false;
       stopBtn.disabled   = true;
@@ -690,8 +696,13 @@
       var validSplit  = parseFloat(document.getElementById('paValidSplit').value) || 0.2;
       var dataSource  = document.getElementById('paDataSource').value || 'db';
 
-      if (dataSource === 'upload' && !_uploadedFile) {
-        termLog('[ERROR] Please upload a dataset file before training.', 'pa-log-error');
+      var ds = document.getElementById('paDataSource');
+      if (ds && ds.value === 'upload' && !_uploadedFile) {
+        termLog('[ERROR] Please upload a CSV/Excel dataset file before starting training.', 'pa-log-error');
+        termLog('[ERROR] Drag & drop a file or click the upload zone above.', 'pa-log-error');
+        setTrainStatus('error');
+        startBtn.disabled = false;
+        stopBtn.disabled  = true;
         return;
       }
 
@@ -1005,6 +1016,7 @@
 
               setProgress(100, 'done');
               setTrainStatus('done');
+              fetch('http://localhost:5001/train/stream_log_end', { method: 'POST' }).catch(function () {}); // ← add this line
               startBtn.disabled = false;
               stopBtn.disabled  = true;
 
