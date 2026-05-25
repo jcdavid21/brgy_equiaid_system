@@ -5,6 +5,11 @@ if _script_dir not in sys.path:
     sys.path.insert(0, _script_dir)
 _os.chdir(_script_dir)
 
+# ── Windows TensorFlow fix ────────────────────────────────
+import os as _env_os
+_env_os.environ.setdefault('TF_ENABLE_ONEDNN_OPTS', '0')
+_env_os.environ.setdefault('TF_CPP_MIN_LOG_LEVEL', '2')
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import numpy as np
@@ -19,7 +24,7 @@ CORS(app)
 
 BASE           = os.path.dirname(os.path.abspath(__file__))
 FLOOD_MBV2     = os.path.join(BASE, 'models/flood_models/cnn_mobilenetv2.keras')
-FLOOD_RESNET   = os.path.join(BASE, 'models/flood_models/cnn_resnet50.keras')
+FLOOD_RESNET   = os.path.join(BASE, 'models/flood_models/cnn_resnet50.keras')  # optional
 FLOOD_YOLO_N   = os.path.join(BASE, 'models/flood_models/yolo_nano_flood.onnx')
 FLOOD_YOLO_S   = os.path.join(BASE, 'models/flood_models/yolo_small_flood.onnx')
 DAMAGE_WEIGHTS = os.path.join(BASE, 'models/damage_models/damage_weights.weights.h5')
@@ -34,8 +39,19 @@ def get_tf():
 def load_flood_cnn():
     if 'flood_mbv2' not in _models:
         tf = get_tf()
-        _models['flood_mbv2']   = tf.keras.models.load_model(FLOOD_MBV2)
-        _models['flood_resnet'] = tf.keras.models.load_model(FLOOD_RESNET)
+        _models['flood_mbv2'] = tf.keras.models.load_model(FLOOD_MBV2)
+        print('✅ MobileNetV2 flood model loaded', flush=True)
+        # Load ResNet only if the file exists and is valid (>1 MB)
+        if os.path.exists(FLOOD_RESNET) and os.path.getsize(FLOOD_RESNET) > 1_000_000:
+            try:
+                _models['flood_resnet'] = tf.keras.models.load_model(FLOOD_RESNET)
+                print('✅ ResNet50 flood model loaded', flush=True)
+            except Exception as e:
+                print(f'⚠ ResNet50 failed to load ({e}), using MobileNetV2 only', flush=True)
+                _models['flood_resnet'] = _models['flood_mbv2']
+        else:
+            print('⚠ cnn_resnet50.keras missing/empty — using MobileNetV2 for both models', flush=True)
+            _models['flood_resnet'] = _models['flood_mbv2']
     return _models['flood_mbv2'], _models['flood_resnet']
 
 def load_yolo():
@@ -765,4 +781,17 @@ if __name__ == '__main__':
         print(f'  EQUIAID Predict API  →  http://0.0.0.0:5001', flush=True)
         print(f'  Training log         →  {_LOG_FILE}', flush=True)
         print(f'  Tail logs:  tail -f {_LOG_FILE}\n', flush=True)
+
+        # ── Pre-warm all models before accepting requests (Windows fix) ──
+        print('  Pre-loading models… (this may take 30–90s on Windows)', flush=True)
+        try:
+            load_flood_cnn()
+        except Exception as e:
+            print(f'  ⚠ Flood CNN pre-load failed: {e}', flush=True)
+        try:
+            load_yolo()
+        except Exception as e:
+            print(f'  ⚠ YOLO pre-load failed: {e}', flush=True)
+        print('  ✅ Models ready — server starting\n', flush=True)
+
         app.run(host='0.0.0.0', port=5001, debug=False, threaded=True)
