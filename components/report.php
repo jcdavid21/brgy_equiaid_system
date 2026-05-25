@@ -212,7 +212,7 @@ $user_name = htmlspecialchars($_SESSION['user_name'] ?? 'Resident', ENT_QUOTES);
                         </div><!-- /.form-grid -->
 
                         <div class="form-actions">
-                            <button type="button" class="btn btn-primary btn-submit" id="btn-submit">
+                            <button type="button" class="btn btn-primary btn-submit" id="btn-submit" disabled>
                                 <i class="fa-solid fa-paper-plane"></i>
                                 Submit Report
                             </button>

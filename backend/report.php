@@ -78,6 +78,62 @@ try {
                 $severity = 'Moderate';
             }
 
+            // ── AI flood confidence guard (server-side) ───
+            if ($report_type === 'Flood') {
+                $ai_confidence  = isset($_POST['ai_flood_confidence'])
+                    ? (float) $_POST['ai_flood_confidence'] : null;
+                $ai_flood_pct   = isset($_POST['ai_flood_pct'])
+                    ? (float) $_POST['ai_flood_pct'] : null;
+                $ai_false_pos   = ($_POST['ai_false_positive'] ?? '0') === '1';
+
+                // Only reject if an AI analysis was actually run and it came back low-confidence
+                if ($ai_confidence !== null && $ai_flood_pct !== null) {
+                    $isSignificantFlood = !$ai_false_pos && $ai_flood_pct >= 15.0;
+                    if ($isSignificantFlood && $ai_confidence < 0.50) {
+                        echo json_encode([
+                            'ok'    => false,
+                            'error' => 'The AI flood confidence is below 50% ('
+                                . round($ai_confidence * 100, 1)
+                                . '%). This photo cannot be classified as a confirmed flood report. '
+                                . 'Please upload a clearer image or change the report type.',
+                        ]);
+                        exit;
+                    }
+                }
+            }
+
+            // ── Rate-limit: max 5 reports per user per hour ──
+            $recent = $pdo->prepare("
+                SELECT COUNT(*) FROM resident_reports
+                WHERE user_id = :uid
+                  AND created_at >= NOW() - INTERVAL 1 HOUR
+            ");
+            $recent->execute([':uid' => $user_id]);
+            if ((int) $recent->fetchColumn() >= 5) {
+                echo json_encode([
+                    'ok'    => false,
+                    'error' => 'You have submitted too many reports in the last hour. Please wait before filing another report.',
+                ]);
+                exit;
+            }
+
+            // ── Duplicate guard: same type + same street in last 10 min ──
+            $dup = $pdo->prepare("
+                SELECT COUNT(*) FROM resident_reports
+                WHERE user_id    = :uid
+                  AND street_id  = :sid
+                  AND report_type = :rtype
+                  AND created_at  >= NOW() - INTERVAL 10 MINUTE
+            ");
+            $dup->execute([':uid' => $user_id, ':sid' => $street_id, ':rtype' => $report_type]);
+            if ((int) $dup->fetchColumn() > 0) {
+                echo json_encode([
+                    'ok'    => false,
+                    'error' => 'A similar report for this street was already submitted in the last 10 minutes. Please check existing reports before submitting again.',
+                ]);
+                exit;
+            }
+
             // ── Handle image upload ───────────────────────
             $image_path = null;
             if (!empty($_FILES['image']['tmp_name'])) {

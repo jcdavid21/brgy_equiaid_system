@@ -10,6 +10,24 @@ const FLASK_API = 'http://localhost:5001';
 const BACKEND_API = '../backend/report.php';
 const MAX_DESC_LEN = 500;
 
+// ── Submission Guard Thresholds ───────────────────────────
+const MIN_CONFIDENCE_FLOOD   = 0.50;   // < 50 % confidence → not considered flood
+const MIN_FLOOD_PCT          = 15;     // < 15 % area covered → not significant
+const MIN_DESC_LEN_REQUIRED  = 0;      // no minimum description length required
+const MAX_REPORTS_PER_SESSION = 5;     // spam-guard: max reports in one session
+
+// ── Session report counter (in-memory anti-spam) ──────────
+let sessionReportCount = 0;
+
+// ── Validation state ──────────────────────────────────────
+const validationIssues = {
+    lowConfidence:  false,
+    outOfBounds:    false,
+    noLocation:     false,
+    spamGuard:      false,
+    duplicateFlag:  false,
+};
+
 // ── Safe fetch ────────────────────────────────────────────
 async function safeFetch(url, options = {}, timeoutMs = 120000) {
     const ctrl = new AbortController();
@@ -99,8 +117,61 @@ function hideLoading() {
 function showError(msg) {
     cardResult.hidden = false;
     aiSummary.style.background = '#7f1d1d';
-    aiSummary.textContent = '✖ ' + msg;
+    aiSummary.innerHTML = '<i class="fa-solid fa-circle-xmark" style="margin-right:6px;"></i>' + msg;
     cardResult.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ── Warning panel ─────────────────────────────────────────
+const warningPanel = (() => {
+    let el = document.getElementById('submission-warnings');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'submission-warnings';
+        el.style.cssText = `
+            display:none; margin:12px 0; padding:14px 16px;
+            background:#fff7ed; border:1.5px solid #f97316;
+            border-radius:10px; color:#7c2d12; font-size:0.875rem; line-height:1.6;
+        `;
+        // Insert before the submit button
+        btnSubmit && btnSubmit.parentElement && btnSubmit.parentElement.insertBefore(el, btnSubmit);
+    }
+    return el;
+})();
+
+function updateWarningPanel() {
+    const isFloodType = typeSelect.value === 'Flood';
+
+    if (isFloodType && !predictionDone) {
+        warningPanel.style.display = 'block';
+        const notAnalyzedMsg = selectedFile
+            ? '<li style="margin-bottom:6px;"><i class="fa-solid fa-magnifying-glass" style="color:#ea580c;margin-right:7px;"></i><strong>Photo not yet analyzed</strong> — You have uploaded a photo. Please click <em>Analyze</em> to run the AI flood check before submitting.</li>'
+            : '<li style="margin-bottom:6px;"><i class="fa-solid fa-image" style="color:#ea580c;margin-right:7px;"></i><strong>No photo analyzed</strong> — Please upload a photo and click <em>Analyze</em> before submitting a Flood report.</li>';
+        warningPanel.innerHTML =
+            '<strong style="color:#c2410c;font-size:0.9rem;"><i class="fa-solid fa-circle-xmark" style="margin-right:6px;"></i>Cannot Submit Yet</strong>' +
+            '<ul style="margin:8px 0 0 0;padding-left:18px;">' + notAnalyzedMsg + '</ul>';
+        btnSubmit.disabled = true;
+        btnSubmit.title    = selectedFile ? 'Click Analyze first' : 'Upload and analyze a photo first';
+        return;
+    }
+
+    if (validationIssues.lowConfidence) {
+        warningPanel.style.display = 'block';
+        warningPanel.innerHTML =
+            '<strong style="color:#c2410c;font-size:0.9rem;"><i class="fa-solid fa-circle-xmark" style="margin-right:6px;"></i>Cannot Submit — Please resolve the following:</strong>' +
+            '<ul style="margin:8px 0 0 0;padding-left:18px;">' +
+            '<li style="margin-bottom:6px;"><i class="fa-solid fa-microchip-ai" style="color:#ea580c;margin-right:7px;"></i><strong>Low AI confidence</strong> — The AI model\'s flood detection confidence is below 50%. This photo cannot be classified as a confirmed flood. Please upload a clearer photo showing visible floodwater.</li>' +
+            '</ul>';
+        btnSubmit.disabled = true;
+        btnSubmit.title    = 'Fix the issues above before submitting';
+    } else {
+        warningPanel.style.display = 'none';
+        btnSubmit.disabled = false;
+        btnSubmit.title    = '';
+    }
+}
+
+function hasBlockingIssues() {
+    return validationIssues.lowConfidence;
 }
 
 // Maps flood severity string → CSS class
@@ -193,6 +264,7 @@ function handleFile(file) {
     aiFloodResult = null;
     aiSummary.textContent = '';
     aiSummary.style.background = '';
+    updateWarningPanel();
 }
 
 function resetUpload() {
@@ -206,6 +278,7 @@ function resetUpload() {
     cardResult.hidden = true;
     aiSummary.textContent = '';
     aiSummary.style.background = '';
+    updateWarningPanel();
 }
 
 // ── Analyze button ────────────────────────────────────────
@@ -235,9 +308,9 @@ btnAnalyze.addEventListener('click', async () => {
         );
         if (!aiFloodResult.ok) throw new Error(aiFloodResult.error);
 
+        predictionDone = true;
         renderResults(aiFloodResult);
         autoFillForm(aiFloodResult);
-        predictionDone = true;
 
     } catch (err) {
         console.error('Prediction error:', err);
@@ -251,11 +324,19 @@ btnAnalyze.addEventListener('click', async () => {
 // ── Render AI results ─────────────────────────────────────
 function renderResults(flood) {
 
+    // ── Confidence & flood validity check ─────────────────
+    const confPct    = flood.confidence * 100;
+    const isLowConf  = flood.confidence < MIN_CONFIDENCE_FLOOD;
+    const isFloodSig = !flood.false_positive && flood.flood_pct >= MIN_FLOOD_PCT;
+
+    validationIssues.lowConfidence = (typeSelect.value === 'Flood') && isLowConf;
+    updateWarningPanel();
+
     // ── Flood panel ───────────────────────────────────────
     floodSevBanner.className = `severity-banner ${floodSeverityClass(flood.severity)}`;
     floodSevLabel.textContent = `Flood Level: ${flood.severity}`;
     floodPct.textContent  = `${flood.flood_pct}%`;
-    floodConf.textContent = `${(flood.confidence * 100).toFixed(1)}%`;
+    floodConf.textContent = `${confPct.toFixed(1)}%`;
     floodOverlay.src  = `data:image/png;base64,${flood.overlay_b64}`;
     yoloNanoImg.src   = `data:image/png;base64,${flood.yolo_nano_b64}`;
     yoloSmallImg.src  = `data:image/png;base64,${flood.yolo_small_b64}`;
@@ -264,20 +345,32 @@ function renderResults(flood) {
     const isFlood = flood.flood_pct > 15 && !flood.false_positive;
 
     if (flood.false_positive) {
-        aiSummary.className   = 'ai-summary ai-summary--info';
-        aiSummary.textContent =
-            `ℹ️ The AI spotted blue areas in your photo but determined they are likely sky, ` +
+        aiSummary.className  = 'ai-summary ai-summary--info';
+        aiSummary.innerHTML  =
+            `<i class="fa-solid fa-circle-info" style="margin-right:7px;"></i>` +
+            `The AI spotted blue areas in your photo but determined they are likely sky, ` +
             `haze, or other non-water surfaces — not actual flooding. ` +
             `Please confirm the details below before submitting.`;
+    } else if (isLowConf && isFloodSig) {
+        aiSummary.className  = 'ai-summary ai-summary--warn';
+        aiSummary.innerHTML  =
+            `<i class="fa-solid fa-triangle-exclamation" style="margin-right:7px;"></i>` +
+            `The AI detected ${flood.flood_pct}% flood coverage but confidence is only ` +
+            `${confPct.toFixed(1)}% (below the 50% threshold). This will NOT be classified as ` +
+            `a flood report. Please upload a clearer photo with visible floodwater, or change ` +
+            `the report type to another category.`;
     } else if (isFlood) {
-        aiSummary.className   = 'ai-summary';
-        aiSummary.textContent =
-            `⚠ The AI detected ${flood.severity} flooding covering about ${flood.flood_pct}% of your photo. ` +
+        aiSummary.className  = 'ai-summary';
+        aiSummary.innerHTML  =
+            `<i class="fa-solid fa-triangle-exclamation" style="margin-right:7px;"></i>` +
+            `The AI detected ${flood.severity} flooding covering about ${flood.flood_pct}% of your photo ` +
+            `(confidence: ${confPct.toFixed(1)}%). ` +
             `Please review the details below before submitting.`;
     } else {
-        aiSummary.className   = 'ai-summary ai-summary--info';
-        aiSummary.textContent =
-            `✓ The AI did not detect significant flooding in this photo. ` +
+        aiSummary.className  = 'ai-summary ai-summary--info';
+        aiSummary.innerHTML  =
+            `<i class="fa-solid fa-circle-check" style="margin-right:7px;"></i>` +
+            `The AI did not detect significant flooding in this photo. ` +
             `Please review and adjust the details if needed before submitting.`;
     }
 
@@ -288,11 +381,39 @@ function renderResults(flood) {
 
 // ── Auto-fill form from AI results ────────────────────────
 function autoFillForm(flood) {
-    const isFlood = !flood.false_positive && flood.flood_pct > 15;
-    typeSelect.value = 'Flood';
-    const sevMap = { None: 'Low', Low: 'Low', Moderate: 'Moderate', High: 'Moderate', Severe: 'Severe' };
-    setSeverity(isFlood ? (sevMap[flood.severity] || 'Moderate') : 'Low');
+    const isLowConf  = flood.confidence < MIN_CONFIDENCE_FLOOD;
+    const isFlood    = !flood.false_positive && flood.flood_pct > MIN_FLOOD_PCT;
+    const isConfirmedFlood = isFlood && !isLowConf;
+
+    if (isConfirmedFlood) {
+        typeSelect.value = 'Flood';
+        const sevMap = { None: 'Low', Low: 'Low', Moderate: 'Moderate', High: 'Moderate', Severe: 'Severe' };
+        setSeverity(sevMap[flood.severity] || 'Moderate');
+    } else if (isFlood && isLowConf) {
+        // Detected something but confidence too low — don't auto-set Flood
+        typeSelect.value = 'Other';
+        setSeverity('Low');
+    }
+    // Re-validate after auto-fill
+    validateDescription();
+    validationIssues.lowConfidence = (typeSelect.value === 'Flood') && isLowConf;
+    updateWarningPanel();
 }
+
+// ── Description validation ────────────────────────────────
+function validateDescription() {
+    descCount.textContent = Math.min(fDesc.value.length, MAX_DESC_LEN);
+}
+
+// ── Re-validate lowConfidence when type changes ───────────
+typeSelect.addEventListener('change', () => {
+    if (aiFloodResult) {
+        const isLowConf = aiFloodResult.confidence < MIN_CONFIDENCE_FLOOD;
+        const isFlood   = !aiFloodResult.false_positive && aiFloodResult.flood_pct >= MIN_FLOOD_PCT;
+        validationIssues.lowConfidence = (typeSelect.value === 'Flood') && isLowConf;
+        updateWarningPanel();
+    }
+});
 
 // ── Severity picker ───────────────────────────────────────
 severityPicker.addEventListener('click', e => {
@@ -365,6 +486,11 @@ async function captureLocation() {
         const lng = pos.coords.longitude.toFixed(6);
         fLat.value = lat;
         fLng.value = lng;
+
+        validationIssues.noLocation  = false;
+        validationIssues.outOfBounds = false;
+        updateWarningPanel();
+
         setGeoState('ok');
         geoCoords.textContent  = `${lat}, ${lng}`;
         geoAddress.textContent = 'Looking up address…';
@@ -388,6 +514,18 @@ async function captureLocation() {
                         setTimeout(() => tryGeo(0, false), GEO_RETRY_DELAY);
                         return;
                     }
+                    // All retries exhausted for POSITION_UNAVAILABLE — use Bagong Silang default
+                    const DEFAULT_LAT = 14.7097;
+                    const DEFAULT_LNG = 121.0450;
+                    fLat.value = DEFAULT_LAT.toFixed(6);
+                    fLng.value = DEFAULT_LNG.toFixed(6);
+                    validationIssues.noLocation  = false;
+                    validationIssues.outOfBounds = false;
+                    updateWarningPanel();
+                    setGeoState('ok');
+                    geoCoords.textContent  = `${fLat.value}, ${fLng.value} (default)`;
+                    geoAddress.textContent = 'Bagong Silang, North Caloocan (default location)';
+                    return;
                 }
 
                 const msgs = {
@@ -395,6 +533,9 @@ async function captureLocation() {
                     2: 'Position unavailable. Please tap Retry or enter your street manually.',
                     3: 'Request timed out. Please try again.',
                 };
+                validationIssues.noLocation  = true;
+                validationIssues.outOfBounds = false;
+                updateWarningPanel();
                 setGeoState('err', msgs[err.code] || 'Could not get location.');
             },
             highAccuracy
@@ -413,10 +554,32 @@ fDesc.addEventListener('input', () => {
     const len = fDesc.value.length;
     descCount.textContent = Math.min(len, MAX_DESC_LEN);
     if (len > MAX_DESC_LEN) fDesc.value = fDesc.value.slice(0, MAX_DESC_LEN);
+    validateDescription();
 });
 
 // ── Submit report ─────────────────────────────────────────
 btnSubmit.addEventListener('click', async () => {
+    // ── Re-run all validations before submit ──────────────
+    validateDescription();
+
+    // Re-check location
+    const latVal = parseFloat(fLat.value);
+    const lngVal = parseFloat(fLng.value);
+    if (!fLat.value || !fLng.value || isNaN(latVal) || isNaN(lngVal)) {
+        validationIssues.noLocation  = true;
+        validationIssues.outOfBounds = false;
+    } else {
+        validationIssues.noLocation  = false;
+        validationIssues.outOfBounds = false;
+    }
+
+    // Re-check spam guard
+    validationIssues.spamGuard = sessionReportCount >= MAX_REPORTS_PER_SESSION;
+
+    updateWarningPanel();
+
+    if (hasBlockingIssues()) return;
+
     if (!streetSelect.value) {
         streetSelect.focus();
         alert('Please select the street/location.');
@@ -438,14 +601,19 @@ btnSubmit.addEventListener('click', async () => {
 
         // Include AI results if prediction was run
         if (aiFloodResult) {
-            fd.append('ai_flood_severity', aiFloodResult.severity);
-            fd.append('ai_flood_pct', aiFloodResult.flood_pct);
-            fd.append('ai_flood_confidence', aiFloodResult.confidence);
+            fd.append('ai_flood_severity',    aiFloodResult.severity);
+            fd.append('ai_flood_pct',         aiFloodResult.flood_pct);
+            fd.append('ai_flood_confidence',  aiFloodResult.confidence);
+            fd.append('ai_false_positive',    aiFloodResult.false_positive ? '1' : '0');
         }
+
+        // Pass geofence validation result so PHP can double-check
+        fd.append('geo_validated', (!validationIssues.outOfBounds && !validationIssues.noLocation) ? '1' : '0');
 
         const data = await safeFetch(BACKEND_API, { method: 'POST', body: fd });
         if (!data.ok) throw new Error(data.error);
 
+        sessionReportCount++;
         modalReportId.textContent = `#${data.report_id}`;
         modalSuccess.hidden = false;
 
@@ -467,6 +635,11 @@ btnReset.addEventListener('click', () => {
     fLat.value = fLng.value = '';
     captureLocation();
     setSeverity('Moderate');
+    // Reset validation flags (keep location flags — captureLocation will update them)
+    validationIssues.lowConfidence = false;
+    validationIssues.spamGuard     = sessionReportCount >= MAX_REPORTS_PER_SESSION;
+    validationIssues.duplicateFlag = false;
+    updateWarningPanel();
 });
 
 // ── Modal close ───────────────────────────────────────────
@@ -487,4 +660,5 @@ typeSelect.value = 'Flood';
 document.addEventListener('DOMContentLoaded', () => {
     loadStreets();
     captureLocation();
+    updateWarningPanel();
 });

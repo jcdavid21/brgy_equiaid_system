@@ -833,3 +833,12 @@ textarea:focus { border-color: var(--navy); }
     .severity-picker { flex-direction: column; }
     .report-card { padding: 20px; }
 }
+
+#btn-submit:disabled {
+    background: #9ca3af !important;
+    color: #f3f4f6 !important;
+    cursor: not-allowed !important;
+    opacity: 1 !important;
+    box-shadow: none !important;
+    border-color: #9ca3af !important;
+}
