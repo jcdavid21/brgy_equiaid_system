@@ -256,14 +256,21 @@ def predict_flood():
         overlay_b64 = img_to_b64(blended)
 
         import tempfile, os as _os
-        tmp = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
-        cv2.imwrite(tmp.name, img_bgr)
-        tmp.close()
-
         yolo_nano, yolo_small = load_yolo()
-        res_nano  = yolo_nano.predict(tmp.name,  imgsz=320, conf=0.5, verbose=False)
-        res_small = yolo_small.predict(tmp.name, imgsz=320, conf=0.5, verbose=False)
-        _os.unlink(tmp.name)
+
+        # Windows-safe: close the file before YOLO opens it
+        with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tmp:
+            tmp_path = tmp.name
+
+        try:
+            cv2.imwrite(tmp_path, img_bgr)
+            res_nano  = yolo_nano.predict(tmp_path,  imgsz=320, conf=0.5, verbose=False)
+            res_small = yolo_small.predict(tmp_path, imgsz=320, conf=0.5, verbose=False)
+        finally:
+            try:
+                _os.unlink(tmp_path)
+            except Exception:
+                pass
 
         def process_yolo_result(result, orig_bgr):
             plotted = result[0].plot()
@@ -758,4 +765,4 @@ if __name__ == '__main__':
         print(f'  EQUIAID Predict API  →  http://0.0.0.0:5001', flush=True)
         print(f'  Training log         →  {_LOG_FILE}', flush=True)
         print(f'  Tail logs:  tail -f {_LOG_FILE}\n', flush=True)
-        app.run(host='0.0.0.0', port=5001, debug=False)
+        app.run(host='0.0.0.0', port=5001, debug=False, threaded=True)

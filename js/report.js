@@ -11,7 +11,7 @@ const BACKEND_API = '../backend/report.php';
 const MAX_DESC_LEN = 500;
 
 // ── Safe fetch ────────────────────────────────────────────
-async function safeFetch(url, options = {}, timeoutMs = 30000) {
+async function safeFetch(url, options = {}, timeoutMs = 120000) {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), timeoutMs);
     options.signal = ctrl.signal;
