@@ -115,6 +115,7 @@
   var allImpacts   = [];
   var currentEvent = null;
   var currentEventId = null;
+  var modalScrollY = 0;
 
   /* Filter state */
   var filterImpact = '';
@@ -196,10 +197,6 @@
           minWidth:   220,
         });
 
-        marker.on('click', function () {
-          openDetailModal(s.street_id, eventId);
-        });
-
         marker.addTo(tiMap);
         tiMarkers.push({ marker: marker, street: s });
       });
@@ -278,20 +275,13 @@
     if (s.is_affected) {
       html += '<div class="ti-popup-divider"></div>'
         + '<div class="ti-popup-row"><span><i class="fa-solid fa-water" style="width:14px;"></i> Flood</span><strong>' + esc(s.flood_status) + '</strong></div>'
-        + '<div class="ti-popup-row"><span><i class="fa-solid fa-house-chimney-crack" style="width:14px;"></i> Damage</span><strong>' + esc(s.damage_status) + '</strong></div>'
-        + '<div class="ti-popup-row"><span><i class="fa-solid fa-people-group" style="width:14px;"></i> HH</span><strong>' + esc(s.affected_households) + '</strong></div>'
-        + '<div class="ti-popup-row"><span><i class="fa-solid fa-person" style="width:14px;"></i> Persons</span><strong>' + esc(s.affected_persons) + '</strong></div>'
-        + (s.flood_height_m ? '<div class="ti-popup-row"><span><i class="fa-solid fa-ruler-vertical" style="width:14px;"></i> Height</span><strong>' + s.flood_height_m + 'm</strong></div>' : '')
         + '<div class="ti-popup-row"><span><i class="fa-solid fa-hand-holding-heart" style="width:14px;"></i> Response</span><strong>' + esc(s.welfare_status) + '</strong></div>';
     } else {
       html += '<div class="ti-popup-divider"></div>'
         + '<div class="ti-popup-row"><span>Status</span><strong>No recorded impact</strong></div>';
     }
 
-    html += '<button class="ti-popup-btn" onclick="window.__tiOpenDetail(' + s.street_id + ')">'
-      + '<i class="fa-solid fa-circle-info" style="margin-right:5px;"></i>View Full Details'
-      + '</button>'
-      + '</div>';
+    html += '</div>';
     return html;
   }
 
@@ -830,7 +820,7 @@
     var eyebrow = el('tiModalEyebrow');
     if (!modal) return;
 
-    modal.classList.add('open');
+    openModal('tiDetailModal');
     body.innerHTML = '<div class="ti-empty"><div class="map-spinner"></div><div class="ti-empty-text">Loading details…</div></div>';
     if (title) title.textContent = '—';
 
@@ -1100,6 +1090,208 @@
     URL.revokeObjectURL(url);
   }
 
+
+  /* ══════════════════════════════════════════════════════
+     ADMIN FORMS — Add Event / Set Status / Log Impact
+  ══════════════════════════════════════════════════════ */
+
+  function showFormMsg(elId, msg, ok) {
+    var el = document.getElementById(elId);
+    if (!el) return;
+    el.style.display = '';
+    el.style.background = ok ? 'rgba(22,163,74,.15)' : 'rgba(220,38,38,.15)';
+    el.style.color = ok ? '#4ade80' : '#f87171';
+    el.style.border = '1px solid ' + (ok ? '#4ade80' : '#f87171');
+    el.textContent = msg;
+  }
+
+  function openModal(id) {
+    var m = document.getElementById(id);
+    if (!m) return;
+    modalScrollY = window.scrollY || window.pageYOffset || 0;
+    document.body.classList.add('ti-modal-locked');
+    document.body.style.top = '-' + modalScrollY + 'px';
+    m.classList.add('open');
+  }
+
+  function closeModal(id) {
+    var m = document.getElementById(id);
+    if (m) m.classList.remove('open');
+    if (!document.querySelector('.modal-backdrop.open')) {
+      document.body.classList.remove('ti-modal-locked');
+      document.body.style.top = '';
+      window.scrollTo(0, modalScrollY);
+    }
+  }
+
+  function setupAdminForms() {
+    var allEvents = [];
+
+    /* ── helpers to populate event dropdowns ── */
+    function populateEventDropdown(selId) {
+      var sel = document.getElementById(selId);
+      if (!sel) return;
+      sel.innerHTML = '<option value="">— Select event —</option>';
+      allEvents.forEach(function (e) {
+        var opt = document.createElement('option');
+        opt.value = e.event_id;
+        opt.textContent = e.event_name + ' (' + (e.status) + ')';
+        sel.appendChild(opt);
+      });
+    }
+
+    /* pull events once and reuse */
+    fetch(API + '?action=events').then(function (r) { return r.json(); }).then(function (d) {
+      if (d.ok) {
+        allEvents = d.events;
+        populateEventDropdown('msEventSelect');
+        populateEventDropdown('aiEventSelect');
+      }
+    });
+
+    /* populate streets dropdown */
+    fetch(API + '?action=streets_list').then(function (r) { return r.json(); }).then(function (d) {
+      if (!d.ok) return;
+      var sel = document.getElementById('aiStreetSelect');
+      if (!sel) return;
+      sel.innerHTML = '<option value="">— Select street —</option>';
+      d.streets.forEach(function (s) {
+        var opt = document.createElement('option');
+        opt.value = s.street_id;
+        opt.textContent = s.street_name + ' (' + s.zone_name + ')';
+        sel.appendChild(opt);
+      });
+    });
+
+    /* ── ADD EVENT modal ── */
+    var btnAddEvent = document.getElementById('btnAddEvent');
+    if (btnAddEvent) btnAddEvent.addEventListener('click', function () { openModal('tiAddEventModal'); });
+    ['tiAddEventModalClose','tiAddEventCancel'].forEach(function (id) {
+      var b = document.getElementById(id);
+      if (b) b.addEventListener('click', function () { closeModal('tiAddEventModal'); });
+    });
+    document.getElementById('tiAddEventModal').addEventListener('click', function (e) { if (e.target === this) closeModal('tiAddEventModal'); });
+
+    var btnAddEventSubmit = document.getElementById('tiAddEventSubmit');
+    if (btnAddEventSubmit) {
+      btnAddEventSubmit.addEventListener('click', async function () {
+        var name      = document.getElementById('aeEventName').value.trim();
+        var started   = document.getElementById('aeDateStarted').value;
+        if (!name || !started) { showFormMsg('tiAddEventMsg', 'Event name and start date are required.', false); return; }
+        btnAddEventSubmit.disabled = true;
+        try {
+          var params = new URLSearchParams({
+            action:         'add_event',
+            event_name:     name,
+            local_name:     document.getElementById('aeLocalName').value.trim(),
+            category:       document.getElementById('aeCategory').value,
+            date_started:   started,
+            date_ended:     document.getElementById('aeDateEnded').value,
+            landfall_date:  document.getElementById('aeLandfallDate').value,
+            wind_speed_kph: document.getElementById('aeWindSpeed').value,
+            status:         document.getElementById('aeStatus').value,
+            notes:          document.getElementById('aeNotes').value.trim(),
+          });
+          var res  = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params });
+          var data = await res.json();
+          if (data.ok) {
+            showFormMsg('tiAddEventMsg', 'Event saved! Reloading events…', true);
+            setTimeout(function () { window.location.reload(); }, 1200);
+          } else {
+            showFormMsg('tiAddEventMsg', data.error || 'Failed to save.', false);
+          }
+        } catch (err) {
+          showFormMsg('tiAddEventMsg', 'Network error: ' + err.message, false);
+        }
+        btnAddEventSubmit.disabled = false;
+      });
+    }
+
+    /* ── MANAGE STATUS modal ── */
+    var btnManageStatus = document.getElementById('btnManageStatus');
+    if (btnManageStatus) btnManageStatus.addEventListener('click', function () {
+      populateEventDropdown('msEventSelect');
+      openModal('tiManageStatusModal');
+    });
+    ['tiManageStatusModalClose','tiManageStatusCancel'].forEach(function (id) {
+      var b = document.getElementById(id);
+      if (b) b.addEventListener('click', function () { closeModal('tiManageStatusModal'); });
+    });
+    document.getElementById('tiManageStatusModal').addEventListener('click', function (e) { if (e.target === this) closeModal('tiManageStatusModal'); });
+
+    var btnMsSubmit = document.getElementById('tiManageStatusSubmit');
+    if (btnMsSubmit) {
+      btnMsSubmit.addEventListener('click', async function () {
+        var eventId = document.getElementById('msEventSelect').value;
+        var status  = document.getElementById('msStatus').value;
+        if (!eventId) { showFormMsg('tiManageStatusMsg', 'Please select an event.', false); return; }
+        btnMsSubmit.disabled = true;
+        try {
+          var params = new URLSearchParams({ action: 'set_event_status', event_id: eventId, status: status });
+          var res  = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params });
+          var data = await res.json();
+          if (data.ok) {
+            showFormMsg('tiManageStatusMsg', 'Status updated to "' + status + '".', true);
+            setTimeout(function () { window.location.reload(); }, 1200);
+          } else {
+            showFormMsg('tiManageStatusMsg', data.error || 'Failed to update.', false);
+          }
+        } catch (err) {
+          showFormMsg('tiManageStatusMsg', 'Network error: ' + err.message, false);
+        }
+        btnMsSubmit.disabled = false;
+      });
+    }
+
+    /* ── LOG IMPACT modal ── */
+    var btnAddImpact = document.getElementById('btnAddImpact');
+    if (btnAddImpact) btnAddImpact.addEventListener('click', function () {
+      populateEventDropdown('aiEventSelect');
+      openModal('tiAddImpactModal');
+    });
+    ['tiAddImpactModalClose','tiAddImpactCancel'].forEach(function (id) {
+      var b = document.getElementById(id);
+      if (b) b.addEventListener('click', function () { closeModal('tiAddImpactModal'); });
+    });
+    document.getElementById('tiAddImpactModal').addEventListener('click', function (e) { if (e.target === this) closeModal('tiAddImpactModal'); });
+
+    var btnAiSubmit = document.getElementById('tiAddImpactSubmit');
+    if (btnAiSubmit) {
+      btnAiSubmit.addEventListener('click', async function () {
+        var eventId  = document.getElementById('aiEventSelect').value;
+        var streetId = document.getElementById('aiStreetSelect').value;
+        if (!eventId || !streetId) { showFormMsg('tiAddImpactMsg', 'Event and Street are required.', false); return; }
+        btnAiSubmit.disabled = true;
+        try {
+          var params = new URLSearchParams({
+            action:               'add_impact',
+            event_id:             eventId,
+            street_id:            streetId,
+            flood_status:         document.getElementById('aiFloodStatus').value,
+            damage_status:        document.getElementById('aiDamageStatus').value,
+            flood_height_m:       document.getElementById('aiFloodHeight').value,
+            road_accessible:      document.getElementById('aiRoadAccessible').value,
+            affected_households:  document.getElementById('aiAffectedHH').value || 0,
+            affected_persons:     document.getElementById('aiAffectedPersons').value || 0,
+            report_source:        document.getElementById('aiReportSource').value,
+            notes:                document.getElementById('aiNotes').value.trim(),
+          });
+          var res  = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params });
+          var data = await res.json();
+          if (data.ok) {
+            showFormMsg('tiAddImpactMsg', 'Impact record saved!', true);
+            setTimeout(function () { window.location.reload(); }, 1200);
+          } else {
+            showFormMsg('tiAddImpactMsg', data.error || 'Failed to save.', false);
+          }
+        } catch (err) {
+          showFormMsg('tiAddImpactMsg', 'Network error: ' + err.message, false);
+        }
+        btnAiSubmit.disabled = false;
+      });
+    }
+  }
+
   /* ══════════════════════════════════════════════════════
      INIT
   ══════════════════════════════════════════════════════ */
@@ -1107,6 +1299,7 @@
     initMap();
     setupFilters();
     loadEvents();
+    setupAdminForms();
   });
 
 })();

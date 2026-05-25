@@ -462,6 +462,48 @@
   color: var(--navy);
 }
 
+body.ti-modal-locked {
+  position: fixed;
+  left: 0;
+  right: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+.modal-backdrop .ti-form-input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: #ffffff;
+  color: #111111;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  outline: none;
+  box-shadow: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.modal-backdrop .ti-form-input::placeholder {
+  color: #6b7280;
+}
+
+.modal-backdrop .ti-form-input:focus {
+  border-color: var(--navy);
+  box-shadow: 0 0 0 3px rgba(15, 31, 61, 0.08);
+}
+
+.modal-backdrop .ti-form-input:disabled {
+  background: #ffffff;
+  color: #111111;
+  opacity: 0.72;
+}
+
+.modal-backdrop textarea.ti-form-input {
+  resize: vertical;
+}
+
 /* ── Plans list ───────────────────────────────────────── */
 .ti-plan-item {
   display: flex;
@@ -1424,3 +1466,9 @@
   align-items: center;
   gap: 8px;
 }
+
+.ti-form-label { display:block; font-size:12px; font-weight:600; color:var(--slate-light,#94a3b8); margin-bottom:5px; text-transform:uppercase; letter-spacing:.4px; }
+.ti-form-input { width:100%; padding:9px 12px; background:var(--card-bg,#1e293b); border:1px solid var(--border,#334155); border-radius:6px; color:var(--text,#e2e8f0); font-size:13px; box-sizing:border-box; outline:none; }
+.ti-form-input:focus { border-color:var(--accent,#3b82f6); }
+.btn-dash-primary { display:inline-flex; align-items:center; gap:7px; padding:8px 18px; background:var(--accent,#3b82f6); color:#fff; border:none; border-radius:7px; font-size:13px; font-weight:600; cursor:pointer; }
+.btn-dash-primary:hover { opacity:.9; }

@@ -12,6 +12,9 @@ header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
 
 require_once __DIR__ . '/db.php'; // provides $pdo
+
+_ensure_welfare_action_plan_columns($pdo);
+
 // Helper: send JSON response
 function respond(bool $ok, $data = null, string $msg = '', int $code = 200): void {
     http_response_code($code);
@@ -70,6 +73,13 @@ try {
     if ($method === 'GET' && $id > 0) {
         $stmt = $pdo->prepare(
             "SELECT w.*,
+                    w.priority,
+                    w.needs_json,
+                    w.steps_json,
+                    w.beneficiary_type,
+                    w.beneficiary_name,
+                    w.target_date,
+                    w.remarks,
                     s.street_name, s.barangay, s.needs_welfare,
                     u.name AS assigned_name, u.role AS assigned_role,
                     c.name AS creator_name,
@@ -116,7 +126,7 @@ try {
             $params[] = $_GET['status'];
         }
         if (!empty($_GET['priority'])) {
-            $where[] = "JSON_UNQUOTE(JSON_EXTRACT(w.description, '$.priority')) = ?";
+            $where[] = 'w.priority = ?';
             $params[] = $_GET['priority'];
         }
         if (!empty($_GET['assistance_type'])) {
@@ -152,6 +162,9 @@ try {
                     w.assigned_to, w.created_by, w.created_at, w.updated_at,
                     w.risk_level_before, w.risk_level_after,
                     w.vuln_score_before, w.vuln_score_after,
+                    w.priority, w.needs_json, w.steps_json,
+                    w.beneficiary_type, w.beneficiary_name,
+                    w.target_date, w.remarks,
                     s.street_name, s.barangay, s.needs_welfare,
                     u.name AS assigned_name
                 FROM welfare_action_plans w
@@ -189,21 +202,28 @@ try {
             }
         }
 
-        // Pack extended fields (not in original schema columns) into description JSON
-        $descPayload = _build_description_payload($input);
+        $description = clean($input['description'] ?? '');
+        $priority = in_array($input['priority'] ?? '', ['High', 'Medium', 'Low'], true)
+            ? $input['priority'] : 'Medium';
+        $beneficiaryType = in_array($input['beneficiary_type'] ?? '', ['street', 'family', 'individual'], true)
+            ? $input['beneficiary_type'] : 'street';
+        $needsJson = json_encode(array_values($input['needs'] ?? []), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $stepsJson = json_encode(array_values($input['steps'] ?? []), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         $stmt = $pdo->prepare(
             "INSERT INTO welfare_action_plans
                 (street_id, event_id, assistance_type, description, status,
-                 risk_level_before, planned_date, assigned_to, created_by)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                 risk_level_before, planned_date, assigned_to, created_by,
+                 priority, needs_json, steps_json, beneficiary_type, beneficiary_name,
+                 target_date, remarks)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         );
 
         $stmt->execute([
             (int) $input['street_id'],
             !empty($input['event_id']) ? (int)$input['event_id'] : null,
             clean($input['assistance_type']),
-            $descPayload,
+            $description,
             in_array($input['status'] ?? '', ['Planned','Ongoing','Completed','Cancelled'])
                 ? $input['status'] : 'Planned',
             in_array($input['risk_level_before'] ?? '', ['RED','ORANGE','YELLOW','GREEN'])
@@ -211,6 +231,13 @@ try {
             $input['planned_date'],
             !empty($input['assigned_to']) ? (int)$input['assigned_to'] : null,
             $_SESSION['user_id'] ?? null,
+            $priority,
+            $needsJson,
+            $stepsJson,
+            $beneficiaryType,
+            clean($input['beneficiary_name'] ?? ''),
+            !empty($input['target_date']) ? $input['target_date'] : null,
+            clean($input['remarks'] ?? ''),
         ]);
 
         $newId = (int)$pdo->lastInsertId();
@@ -233,7 +260,13 @@ try {
             respond(false, null, 'Plan not found.', 404);
         }
 
-        $descPayload  = _build_description_payload($input);
+        $description  = clean($input['description'] ?? '');
+        $priority     = in_array($input['priority'] ?? '', ['High', 'Medium', 'Low'], true)
+            ? $input['priority'] : 'Medium';
+        $beneficiaryType = in_array($input['beneficiary_type'] ?? '', ['street', 'family', 'individual'], true)
+            ? $input['beneficiary_type'] : 'street';
+        $needsJson    = json_encode(array_values($input['needs'] ?? []), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $stepsJson    = json_encode(array_values($input['steps'] ?? []), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         $newStatus    = in_array($input['status'] ?? '', ['Planned','Ongoing','Completed','Cancelled'])
                         ? $input['status'] : 'Planned';
 
@@ -264,7 +297,14 @@ try {
                 planned_date     = ?,
                 started_at       = COALESCE(?, started_at),
                 completed_at     = COALESCE(?, completed_at),
-                assigned_to      = ?
+                     assigned_to      = ?,
+                     priority         = ?,
+                     needs_json       = ?,
+                     steps_json       = ?,
+                     beneficiary_type = ?,
+                     beneficiary_name = ?,
+                     target_date      = ?,
+                     remarks          = ?
              WHERE plan_id = ?"
         );
 
@@ -272,7 +312,7 @@ try {
             (int) $input['street_id'],
             !empty($input['event_id']) ? (int)$input['event_id'] : null,
             clean($input['assistance_type']),
-            $descPayload,
+            $description,
             $newStatus,
             in_array($input['risk_level_before'] ?? '', ['RED','ORANGE','YELLOW','GREEN'])
                 ? $input['risk_level_before'] : null,
@@ -282,6 +322,13 @@ try {
             $startedAt,
             $completedAt,
             !empty($input['assigned_to']) ? (int)$input['assigned_to'] : null,
+            $priority,
+            $needsJson,
+            $stepsJson,
+            $beneficiaryType,
+            clean($input['beneficiary_name'] ?? ''),
+            !empty($input['target_date']) ? $input['target_date'] : null,
+            clean($input['remarks'] ?? ''),
             $id,
         ]);
 
@@ -312,27 +359,36 @@ try {
 }
 
 /* ══════════════════════════════════════════════════════
-   HELPERS — Extended fields stored as JSON in description
-   The base `welfare_action_plans` table stores description as TEXT.
-   We pack extra UX fields (priority, needs, steps, beneficiary info,
-   target_date, remarks) as a JSON prefix so the DB schema stays intact.
-
-   Format: __EXT__:{…json…}||<human readable description>
+   HELPERS — Extended fields stored in dedicated columns
+   Older rows may still use the legacy `__EXT__:{…}||description` format,
+   so decoding keeps backward compatibility.
 ════════════════════════════════════════════════════════ */
 
-function _build_description_payload(array $input): string {
-    $ext = [
-        'priority'         => $input['priority'] ?? 'Medium',
-        'needs'            => $input['needs'] ?? [],
-        'steps'            => $input['steps'] ?? [],
-        'beneficiary_type' => $input['beneficiary_type'] ?? 'street',
-        'beneficiary_name' => clean($input['beneficiary_name'] ?? ''),
-        'target_date'      => $input['target_date'] ?? '',
-        'remarks'          => clean($input['remarks'] ?? ''),
+function _ensure_welfare_action_plan_columns(PDO $pdo): void {
+    $columns = [
+        'priority'         => "ALTER TABLE welfare_action_plans ADD COLUMN priority enum('High','Medium','Low') NOT NULL DEFAULT 'Medium' AFTER vuln_score_after",
+        'needs_json'       => "ALTER TABLE welfare_action_plans ADD COLUMN needs_json text DEFAULT NULL AFTER priority",
+        'steps_json'       => "ALTER TABLE welfare_action_plans ADD COLUMN steps_json text DEFAULT NULL AFTER needs_json",
+        'beneficiary_type' => "ALTER TABLE welfare_action_plans ADD COLUMN beneficiary_type enum('street','family','individual') NOT NULL DEFAULT 'street' AFTER steps_json",
+        'beneficiary_name' => "ALTER TABLE welfare_action_plans ADD COLUMN beneficiary_name varchar(255) DEFAULT NULL AFTER beneficiary_type",
+        'target_date'      => "ALTER TABLE welfare_action_plans ADD COLUMN target_date date DEFAULT NULL AFTER beneficiary_name",
+        'remarks'          => "ALTER TABLE welfare_action_plans ADD COLUMN remarks text DEFAULT NULL AFTER target_date",
     ];
 
-    $humanDesc = clean($input['description'] ?? '');
-    return '__EXT__:' . json_encode($ext, JSON_UNESCAPED_UNICODE) . '||' . $humanDesc;
+    $stmt = $pdo->prepare(
+        "SELECT COLUMN_NAME
+           FROM INFORMATION_SCHEMA.COLUMNS
+          WHERE TABLE_SCHEMA = DATABASE()
+            AND TABLE_NAME = 'welfare_action_plans'"
+    );
+    $stmt->execute();
+    $existing = array_fill_keys($stmt->fetchAll(PDO::FETCH_COLUMN), true);
+
+    foreach ($columns as $name => $sql) {
+        if (!isset($existing[$name])) {
+            $pdo->exec($sql);
+        }
+    }
 }
 
 function _decode_extended_fields(array $plan): array {
@@ -340,22 +396,24 @@ function _decode_extended_fields(array $plan): array {
     if (str_starts_with($desc, '__EXT__:')) {
         $parts = explode('||', substr($desc, 8), 2);
         $ext   = json_decode($parts[0] ?? '{}', true) ?? [];
-        $plan['priority']         = $ext['priority']         ?? 'Medium';
-        $plan['needs']            = $ext['needs']            ?? [];
-        $plan['steps']            = $ext['steps']            ?? [];
-        $plan['beneficiary_type'] = $ext['beneficiary_type'] ?? 'street';
-        $plan['beneficiary_name'] = $ext['beneficiary_name'] ?? '';
-        $plan['target_date']      = $ext['target_date']      ?? '';
-        $plan['remarks']          = $ext['remarks']          ?? '';
+        $plan['priority']         = $ext['priority']         ?? ($plan['priority'] ?? 'Medium');
+        $plan['needs']            = $ext['needs']            ?? (json_decode($plan['needs_json'] ?? '[]', true) ?? []);
+        $plan['steps']            = $ext['steps']            ?? (json_decode($plan['steps_json'] ?? '[]', true) ?? []);
+        $plan['beneficiary_type'] = $ext['beneficiary_type'] ?? ($plan['beneficiary_type'] ?? 'street');
+        $plan['beneficiary_name'] = $ext['beneficiary_name'] ?? ($plan['beneficiary_name'] ?? '');
+        $plan['target_date']      = $ext['target_date']      ?? ($plan['target_date'] ?? '');
+        $plan['remarks']          = $ext['remarks']          ?? ($plan['remarks'] ?? '');
         $plan['description']      = $parts[1] ?? '';
     } else {
-        $plan['priority']         = 'Medium';
-        $plan['needs']            = [];
-        $plan['steps']            = [];
-        $plan['beneficiary_type'] = 'street';
-        $plan['beneficiary_name'] = '';
-        $plan['target_date']      = '';
-        $plan['remarks']          = '';
+        $plan['priority']         = $plan['priority']         ?? 'Medium';
+        $plan['needs']            = isset($plan['needs_json']) ? (json_decode($plan['needs_json'], true) ?? []) : [];
+        $plan['steps']            = isset($plan['steps_json']) ? (json_decode($plan['steps_json'], true) ?? []) : [];
+        $plan['beneficiary_type'] = $plan['beneficiary_type'] ?? 'street';
+        $plan['beneficiary_name'] = $plan['beneficiary_name'] ?? '';
+        $plan['target_date']      = $plan['target_date']      ?? '';
+        $plan['remarks']          = $plan['remarks']          ?? '';
     }
+
+    unset($plan['needs_json'], $plan['steps_json']);
     return $plan;
 }

@@ -22,7 +22,7 @@ if (!$pdo) {
     error_respond('Database connection unavailable.', 503);
 }
 
-$action = $_GET['action'] ?? '';
+$action = $_GET['action'] ?? $_POST['action'] ?? '';
 
 // ════════════════════════════════════════════════════════
 // GLOBAL HELPER — derive impact level from flood + damage
@@ -460,6 +460,116 @@ switch ($action) {
         }, $rows);
 
         respond(['ok' => true, 'impacts' => $list]);
+
+    // ════════════════════════════════════════════════════════
+    // streets_list — for the Log Impact street dropdown
+    // ════════════════════════════════════════════════════════
+    case 'streets_list':
+        $rows = $pdo->query("
+            SELECT s.street_id, s.street_name, z.zone_name
+            FROM streets s
+            JOIN zones z ON z.zone_id = s.zone_id
+            WHERE s.is_active = 1
+            ORDER BY z.zone_name, s.street_name
+        ")->fetchAll(PDO::FETCH_ASSOC);
+        respond(['ok' => true, 'streets' => $rows]);
+
+    // ════════════════════════════════════════════════════════
+    // add_event — insert a new typhoon event (POST)
+    // ════════════════════════════════════════════════════════
+    case 'add_event':
+        $name     = trim($_POST['event_name']    ?? '');
+        $started  = trim($_POST['date_started']  ?? '');
+        if ($name === '' || $started === '') {
+            error_respond('event_name and date_started are required.', 400);
+        }
+        $allowed_status = ['Active', 'Passed', 'Monitoring'];
+        $status = in_array($_POST['status'] ?? '', $allowed_status, true)
+            ? $_POST['status'] : 'Monitoring';
+
+        $category      = filter_var($_POST['category']       ?? null, FILTER_VALIDATE_INT) ?: null;
+        $landfall      = $_POST['landfall_date']  !== '' ? ($_POST['landfall_date']  ?? null) : null;
+        $ended         = $_POST['date_ended']     !== '' ? ($_POST['date_ended']     ?? null) : null;
+        $wind          = filter_var($_POST['wind_speed_kph'] ?? null, FILTER_VALIDATE_FLOAT) ?: null;
+        $notes         = trim($_POST['notes'] ?? '') ?: null;
+        $localName     = trim($_POST['local_name'] ?? '') ?: null;
+
+        $stmt = $pdo->prepare("
+            INSERT INTO typhoon_events
+                (event_name, local_name, category, landfall_date, date_started,
+                 date_ended, wind_speed_kph, status, notes, created_by)
+            VALUES (:name, :local, :cat, :land, :start, :end, :wind, :status, :notes, :by)
+        ");
+        $stmt->execute([
+            ':name'   => $name,
+            ':local'  => $localName,
+            ':cat'    => $category,
+            ':land'   => $landfall,
+            ':start'  => $started,
+            ':end'    => $ended,
+            ':wind'   => $wind,
+            ':status' => $status,
+            ':notes'  => $notes,
+            ':by'     => $_SESSION['user_id'] ?? null,
+        ]);
+        respond(['ok' => true, 'event_id' => (int)$pdo->lastInsertId()]);
+
+    // ════════════════════════════════════════════════════════
+    // set_event_status — update Active / Monitoring / Passed (POST)
+    // ════════════════════════════════════════════════════════
+    case 'set_event_status':
+        $eventId = filter_var($_POST['event_id'] ?? 0, FILTER_VALIDATE_INT);
+        if (!$eventId || $eventId <= 0) { error_respond('Invalid event_id.', 400); }
+        $allowed = ['Active', 'Passed', 'Monitoring'];
+        $status  = $_POST['status'] ?? '';
+        if (!in_array($status, $allowed, true)) { error_respond('Invalid status value.', 400); }
+        $stmt = $pdo->prepare("UPDATE typhoon_events SET status = :s WHERE event_id = :id");
+        $stmt->execute([':s' => $status, ':id' => $eventId]);
+        respond(['ok' => true]);
+
+    // ════════════════════════════════════════════════════════
+    // add_impact — insert into typhoon_street_impacts (POST)
+    // ════════════════════════════════════════════════════════
+    case 'add_impact':
+        $eventId  = filter_var($_POST['event_id']  ?? 0, FILTER_VALIDATE_INT);
+        $streetId = filter_var($_POST['street_id'] ?? 0, FILTER_VALIDATE_INT);
+        if (!$eventId || !$streetId) { error_respond('event_id and street_id are required.', 400); }
+
+        $allowed_flood  = ['None', 'Flooded', 'Severely Flooded'];
+        $allowed_damage = ['None', 'Minor Damage', 'Moderate Damage', 'Severely Damaged'];
+        $allowed_source = ['AI', 'Staff', 'Resident', 'PAGASA'];
+
+        $floodStatus  = in_array($_POST['flood_status']  ?? '', $allowed_flood,  true) ? $_POST['flood_status']  : 'None';
+        $damageStatus = in_array($_POST['damage_status'] ?? '', $allowed_damage, true) ? $_POST['damage_status'] : 'None';
+        $reportSource = in_array($_POST['report_source'] ?? '', $allowed_source, true) ? $_POST['report_source'] : 'Staff';
+        $floodHeight  = filter_var($_POST['flood_height_m']      ?? null, FILTER_VALIDATE_FLOAT) ?: null;
+        $roadAccess   = isset($_POST['road_accessible']) ? (int)(bool)$_POST['road_accessible'] : 1;
+        $affHH        = max(0, (int)($_POST['affected_households'] ?? 0));
+        $affPersons   = max(0, (int)($_POST['affected_persons']    ?? 0));
+        $notes        = trim($_POST['notes'] ?? '') ?: null;
+
+        $stmt = $pdo->prepare("
+            INSERT INTO typhoon_street_impacts
+                (event_id, street_id, flood_status, damage_status, flood_height_m,
+                 road_accessible, affected_households, affected_persons,
+                 report_source, notes, recorded_by)
+            VALUES (:eid, :sid, :flood, :damage, :height,
+                    :road, :hh, :persons, :source, :notes, :by)
+        ");
+        $stmt->execute([
+            ':eid'     => $eventId,
+            ':sid'     => $streetId,
+            ':flood'   => $floodStatus,
+            ':damage'  => $damageStatus,
+            ':height'  => $floodHeight,
+            ':road'    => $roadAccess,
+            ':hh'      => $affHH,
+            ':persons' => $affPersons,
+            ':source'  => $reportSource,
+            ':notes'   => $notes,
+            ':by'      => $_SESSION['user_id'] ?? null,
+        ]);
+        respond(['ok' => true, 'impact_id' => (int)$pdo->lastInsertId()]);
 
     // ════════════════════════════════════════════════════════
     default:

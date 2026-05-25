@@ -103,9 +103,264 @@ const ui = {
 };
 
 /* ══════════════════════════════════════════════════════
+   REPORT HEATMAP
+══════════════════════════════════════════════════════ */
+const ZONE_CENTROIDS_RR = {
+  'Zone 1': [14.7450, 120.9855],
+  'Zone 2': [14.7430, 120.9840],
+  'Zone 3': [14.7410, 120.9820],
+  'Zone 4': [14.7470, 120.9870],
+};
+function jitterRR() { return (Math.random() - 0.5) * 0.0018; }
+
+const TYPE_COLORS = {
+  'Flood':              '#0ea5e9',
+  'Damage':             '#f97316',
+  'Blocked Road':       '#a855f7',
+  'Fire':               '#ef4444',
+  'Medical Emergency':  '#ec4899',
+  'Other':              '#9ca3af',
+};
+const SEVERITY_COLORS = {
+  'Severe':   '#dc2626',
+  'Moderate': '#d97706',
+  'Low':      '#16a34a',
+};
+
+let rrMap        = null;
+let rrMarkers    = [];
+let rrMapLayer   = 'all'; // 'all' | 'severe' | 'type'
+
+function rrMarkerColor(point) {
+  if (rrMapLayer === 'type')   return TYPE_COLORS[point.report_type]   || '#9ca3af';
+  if (rrMapLayer === 'severe') return SEVERITY_COLORS[point.severity]  || '#9ca3af';
+  // 'all' — color by severity
+  return SEVERITY_COLORS[point.severity] || '#9ca3af';
+}
+
+async function initHeatmap() {
+  const mapEl   = document.getElementById('rr-heatmap');
+  const overlay = document.getElementById('rrMapOverlay');
+  if (!mapEl || typeof L === 'undefined') return;
+
+  rrMap = L.map('rr-heatmap', {
+    center: [14.7435, 120.9842],
+    zoom: 16,
+    zoomControl: true,
+    scrollWheelZoom: true,
+  });
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 19,
+  }).addTo(rrMap);
+
+  try {
+    const res  = await fetch('../backend/admin-resident-reports.php?heatmap=1');
+    const data = await res.json();
+    const points = data.data?.points || [];
+
+    // Fallback points using zone centroids for reports with no coords
+    const allReports = await fetch('../backend/admin-resident-reports.php').then(r => r.json());
+    const reportsNoCoords = (allReports.data?.reports || []).filter(r => !r.latitude && !r.longitude);
+
+    // Merge — use street fallback from the heatmap endpoint
+    const allPoints = [...points];
+
+    // Build counts for legend
+    let cntSevere = 0, cntModerate = 0, cntLow = 0, cntPending = 0;
+
+    allPoints.forEach(p => {
+      let lat = p.lat, lng = p.lng;
+
+      const color  = SEVERITY_COLORS[p.severity] || '#9ca3af';
+      const marker = L.circleMarker([lat, lng], {
+        radius:      8,
+        fillColor:   color,
+        color:       '#fff',
+        weight:      2,
+        fillOpacity: 0.85,
+      });
+
+      marker.bindPopup(
+        `<div class="map-popup">` +
+          `<div class="map-popup-name">${p.street_name || 'Unknown Street'}</div>` +
+          `<div class="map-popup-zone">${p.report_type || '—'}</div>` +
+          `<div class="map-popup-divider"></div>` +
+          `<div class="map-popup-row"><span>Severity</span><strong>${p.severity || '—'}</strong></div>` +
+          `<div class="map-popup-row"><span>Status</span><strong>${p.status || '—'}</strong></div>` +
+          `<div class="map-popup-row"><span>Reporter</span><strong>${p.reporter_name || 'Anonymous'}</strong></div>` +
+          `<div class="map-popup-row"><span>Date</span><strong>${p.created_at ? new Date(p.created_at).toLocaleDateString('en-PH') : '—'}</strong></div>` +
+        `</div>`,
+        { className: 'equiaid-popup', maxWidth: 240 }
+      );
+
+      marker.addTo(rrMap);
+      rrMarkers.push({ marker, point: p });
+
+      // Count for legend
+      if (p.severity === 'Severe')         cntSevere++;
+      else if (p.severity === 'Moderate')  cntModerate++;
+      else if (p.severity === 'Low')       cntLow++;
+      if (p.status === 'Pending')          cntPending++;
+    });
+
+    // Update legend counts
+    const legSevere   = document.getElementById('leg-rr-severe');
+    const legModerate = document.getElementById('leg-rr-moderate');
+    const legLow      = document.getElementById('leg-rr-low');
+    const legPending  = document.getElementById('leg-rr-pending');
+    if (legSevere)   legSevere.textContent   = cntSevere;
+    if (legModerate) legModerate.textContent = cntModerate;
+    if (legLow)      legLow.textContent      = cntLow;
+    if (legPending)  legPending.textContent  = cntPending;
+
+  } catch (e) {
+    console.error('Heatmap load error:', e);
+  }
+
+  if (overlay) overlay.style.display = 'none';
+
+  // Layer toggle buttons
+  const btnAll    = document.getElementById('btnRrLayerAll');
+  const btnSevere = document.getElementById('btnRrLayerSevere');
+  const btnType   = document.getElementById('btnRrLayerType');
+
+  function setRrLayer(layer) {
+    rrMapLayer = layer;
+    [btnAll, btnSevere, btnType].forEach(b => b && b.classList.remove('active'));
+    if (layer === 'all'    && btnAll)    btnAll.classList.add('active');
+    if (layer === 'severe' && btnSevere) btnSevere.classList.add('active');
+    if (layer === 'type'   && btnType)   btnType.classList.add('active');
+    rrMarkers.forEach(({ marker, point }) => {
+      marker.setStyle({ fillColor: rrMarkerColor(point) });
+    });
+  }
+
+  if (btnAll)    btnAll.addEventListener('click',    () => setRrLayer('all'));
+  if (btnSevere) btnSevere.addEventListener('click', () => setRrLayer('severe'));
+  if (btnType)   btnType.addEventListener('click',   () => setRrLayer('type'));
+}
+
+/* ══════════════════════════════════════════════════════
+   STREET DOCUMENTATION — Recent Uploaded Images
+══════════════════════════════════════════════════════ */
+var rrAllImages = [];
+
+function rrImgSrc(filePath) {
+  if (!filePath) return '';
+  if (filePath.startsWith('http') || filePath.startsWith('/') || filePath.startsWith('../')) return filePath;
+  return '../' + filePath;
+}
+
+function openRrLightbox(src, meta) {
+  var img    = document.getElementById('rrImgLightboxSrc');
+  var metaEl = document.getElementById('rrImgLightboxMeta');
+  if (img)    img.src         = src;
+  if (metaEl) metaEl.textContent = meta;
+  var lb = document.getElementById('rrImgLightbox');
+  if (lb) lb.classList.add('open');
+}
+
+var RR_IMG_PLACEHOLDER = '<div class="sm-img-thumb-placeholder"><i class="fa-solid fa-image"></i></div>';
+
+function renderRrImageGrid(images) {
+  var grid = document.getElementById('rrImageGrid');
+  if (!grid) return;
+
+  if (!images.length) {
+    grid.innerHTML = '<p style="color:var(--slate-light);font-size:13px;padding:20px 0;grid-column:1/-1;">No images uploaded yet.</p>';
+    return;
+  }
+
+  grid.innerHTML = images.map(function (img) {
+    var src       = rrImgSrc(img.file_path);
+    var statusCls = 'sm-img-status status-' + (img.analysis_status || 'queued').toLowerCase();
+    var thumb     = src
+      ? '<img class="sm-img-thumb" src="' + src + '" alt="Street image" loading="lazy">'
+      : RR_IMG_PLACEHOLDER;
+
+    return (
+      '<div class="sm-img-card" data-src="' + src + '" data-meta="' +
+        (img.street_name || '—') + ' · ' + (img.uploaded_at || '') + ' · ' + (img.analysis_status || 'Queued') + '">' +
+        thumb +
+        '<div class="sm-img-info">' +
+          '<span class="sm-img-street">' + (img.street_name || '—') + '</span>' +
+          '<div class="sm-img-meta">' +
+            '<span>' + (img.uploaded_at ? img.uploaded_at.slice(0, 10) : '—') + '</span>' +
+            '<span class="' + statusCls + '">' + (img.analysis_status || 'Queued') + '</span>' +
+          '</div>' +
+        '</div>' +
+      '</div>'
+    );
+  }).join('');
+
+  grid.querySelectorAll('img.sm-img-thumb').forEach(function (imgEl) {
+    imgEl.addEventListener('error', function () {
+      var ph = document.createElement('div');
+      ph.className = 'sm-img-thumb-placeholder';
+      ph.innerHTML = '<i class="fa-solid fa-image"></i>';
+      imgEl.replaceWith(ph);
+    });
+  });
+
+  grid.querySelectorAll('.sm-img-card').forEach(function (card) {
+    card.addEventListener('click', function () {
+      var src   = card.dataset.src;
+      var imgEl = card.querySelector('img.sm-img-thumb');
+      if (imgEl && imgEl.complete && imgEl.naturalWidth === 0) return;
+      if (src) openRrLightbox(src, card.dataset.meta);
+    });
+  });
+}
+
+async function loadRrImages() {
+  try {
+    var res  = await fetch('../backend/admin-resident-reports.php?images=1&limit=48');
+    var data = await res.json();
+    rrAllImages = data.data?.images || [];
+    renderRrImageGrid(rrAllImages);
+
+    // Populate street filter dropdown
+    var filterEl = document.getElementById('rrImgStreetFilter');
+    if (filterEl && rrAllImages.length) {
+      var seen = {};
+      rrAllImages.forEach(function (img) {
+        if (img.street_name && !seen[img.street_id]) {
+          seen[img.street_id] = true;
+          var opt = document.createElement('option');
+          opt.value       = img.street_id;
+          opt.textContent = img.street_name;
+          filterEl.appendChild(opt);
+        }
+      });
+      filterEl.addEventListener('change', function () {
+        var sid = filterEl.value;
+        renderRrImageGrid(sid
+          ? rrAllImages.filter(function (img) { return String(img.street_id) === sid; })
+          : rrAllImages
+        );
+      });
+    }
+  } catch (e) {
+    console.error('[RR Images]', e);
+  }
+}
+
+// Lightbox close
+document.addEventListener('DOMContentLoaded', function () {
+  var lb     = document.getElementById('rrImgLightbox');
+  var lbClose = document.getElementById('rrImgLightboxClose');
+  if (lbClose) lbClose.addEventListener('click', function () { if (lb) lb.classList.remove('open'); });
+  if (lb) lb.addEventListener('click', function (e) { if (e.target === this) this.classList.remove('open'); });
+});
+
+/* ══════════════════════════════════════════════════════
    INIT
 ════════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
+    initHeatmap();
+    loadRrImages();
     loadMeta().then(() => loadReports());
     bindEvents();
 });

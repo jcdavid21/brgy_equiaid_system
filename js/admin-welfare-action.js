@@ -36,6 +36,8 @@ const state = {
     },
 };
 
+let modalScrollY = 0;
+
 /* ══════════════════════════════════════════════════════
    NEED LABEL / ICON MAP
 ════════════════════════════════════════════════════════ */
@@ -789,12 +791,16 @@ function _toggleRiskAfter() {
 ════════════════════════════════════════════════════════ */
 function _openModal(modal) {
     modal.classList.add('open');
-    document.body.style.overflow = 'hidden';
+    modalScrollY = window.scrollY || window.pageYOffset || 0;
+    document.body.classList.add('wap-modal-locked');
+    document.body.style.top = `-${modalScrollY}px`;
 }
 
 function _closeModal(modal) {
     modal.classList.remove('open');
-    document.body.style.overflow = '';
+    document.body.classList.remove('wap-modal-locked');
+    document.body.style.top = '';
+    window.scrollTo(0, modalScrollY);
 }
 
 /* ══════════════════════════════════════════════════════

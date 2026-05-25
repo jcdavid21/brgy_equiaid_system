@@ -653,3 +653,23 @@
   font-size: 11px;
   color: var(--slate-mid);
 }
+
+.sm-image-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-top:4px;}
+.sm-img-card{border:1px solid var(--border-light);border-radius:10px;overflow:hidden;background:var(--bg-white);transition:all .18s ease;cursor:pointer;}
+.sm-img-card:hover{box-shadow:0 6px 24px rgba(0,0,0,.1);transform:translateY(-2px);border-color:var(--border);}
+.sm-img-thumb{width:100%;height:140px;object-fit:cover;display:block;background:var(--bg-subtle);}
+.sm-img-thumb-placeholder{width:100%;height:140px;background:linear-gradient(145deg,var(--bg-subtle) 0%,var(--border-light) 100%);display:flex;align-items:center;justify-content:center;color:var(--border);}
+.sm-img-thumb-placeholder i{font-size:28px;}
+.sm-img-info{padding:10px 12px;display:flex;flex-direction:column;gap:4px;}
+.sm-img-street{font-size:12.5px;font-weight:600;color:var(--text-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sm-img-meta{font-size:11px;color:var(--slate-light);display:flex;justify-content:space-between;align-items:center;}
+.sm-img-status{font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:100px;}
+.sm-img-status.status-completed{background:#dcfce7;color:#14532d;}
+.sm-img-status.status-pending{background:#fef9c3;color:#713f12;}
+.sm-img-status.status-queued{background:#dbeafe;color:#1e3a8a;}
+.sm-img-status.status-failed{background:#fee2e2;color:#991b1b;}
+.sm-img-skeleton{border-radius:10px;overflow:hidden;background:linear-gradient(90deg,var(--border-light) 25%,var(--bg-subtle) 50%,var(--border-light) 75%);background-size:400px 100%;animation:sk-shimmer 1.4s infinite linear;height:196px;}
+.sm-lightbox-box{position:relative;background:#0f1f3d;border-radius:14px;overflow:hidden;max-width:90vw;max-height:90vh;box-shadow:0 32px 80px rgba(0,0,0,.5);display:flex;flex-direction:column;}
+.sm-lightbox-box img{max-width:80vw;max-height:72vh;object-fit:contain;display:block;}
+.sm-lightbox-meta{padding:14px 18px;background:rgba(0,0,0,.4);color:rgba(255,255,255,.7);font-size:12px;}
+.sm-select-inline{padding:6px 10px;background:var(--card-bg,#1e293b);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;cursor:pointer;}

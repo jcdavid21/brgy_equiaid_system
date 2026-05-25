@@ -293,8 +293,8 @@
   border: 1.5px solid var(--border);
   border-radius: 8px;
   font-size: 13px;
-  color: var(--text-dark);
-  background: var(--bg-white);
+  color: #111111;
+  background: #ffffff;
   outline: none;
   transition: border-color 0.16s ease;
   font-family: 'Poppins', sans-serif;
@@ -330,11 +330,11 @@ textarea.wap-form-control {
   padding: 5px 10px;
   border-radius: 8px;
   border: 1.5px solid var(--border);
-  background: var(--bg-white);
+  background: #ffffff;
   cursor: pointer;
   font-size: 12px;
   font-weight: 500;
-  color: var(--text-mid);
+  color: #111111;
   transition: all 0.14s ease;
   user-select: none;
 }
@@ -382,8 +382,8 @@ textarea.wap-form-control {
   border: 1.5px solid var(--border);
   border-radius: 7px;
   font-size: 12.5px;
-  color: var(--text-dark);
-  background: var(--bg-white);
+  color: #111111;
+  background: #ffffff;
   outline: none;
   font-family: 'Poppins', sans-serif;
   transition: border-color 0.16s ease;
@@ -487,6 +487,14 @@ textarea.wap-form-control {
 
 .btn-wap-submit:hover { opacity: 0.88; }
 .btn-wap-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+body.wap-modal-locked {
+  position: fixed;
+  left: 0;
+  right: 0;
+  width: 100%;
+  overflow: hidden;
+}
 
 /* ═══ VIEW MODAL ════════════════════════════════════════ */
 .wap-view-grid {
@@ -652,7 +660,8 @@ textarea.wap-form-control {
 .wap-form-control:disabled {
   opacity: 0.45;
   cursor: not-allowed;
-  background: var(--bg-subtle);
+  background: #ffffff;
+  color: #111111;
 }
 
 /* ═══ EMPTY STATE ═══════════════════════════════════════ */

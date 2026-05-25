@@ -1,31 +1,73 @@
-[22:00:22] [SYSTEM] EQUIAID Welfare Classifier Training
-[22:00:22] [SYSTEM] Model    : RF
-[22:00:22] [SYSTEM] Epochs   : 20
-[22:00:22] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-[22:00:22] [SYSTEM] LR       : 0.001
-[22:00:22] [SYSTEM] Val Split: 20%
-[22:00:22] [SYSTEM] Algorithm: Random Forest
-[22:00:22] [INFO] Fetching street demographic features from database…
-[22:00:22] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-[22:00:22] [INFO] Features: flood_frequency, poverty_rate_pct, pwd_count,
-[22:00:22] [DATA] 215 records loaded.  train=172  val=43
-[22:00:22] [INFO]           senior_count, fourps_households, informal_settlers_pct, vuln_score
-[22:00:23] [INFO] Initialising Random Forest pipeline (StandardScaler + classifier)…
-[22:00:23] loss: 1.1494  acc: 15.43%  val_loss: 1.1821  val_acc: 13.03%
-[22:00:23] Epoch  1/20  [██░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   5.0%  ETA: 57s
-[22:00:23] [INFO] First epoch complete — model warming up.
-[22:00:26] Epoch  2/20  [███░░░░░░░░░░░░░░░░░░░░░░░░░░░]  10.0%  ETA: 54s
-[22:00:26] loss: 1.1238  acc: 15.50%  val_loss: 1.1641  val_acc: 13.03%
-[22:00:29] Epoch  3/20  [█████░░░░░░░░░░░░░░░░░░░░░░░░░]  15.0%  ETA: 51s
-[22:00:29] loss: 1.1498  acc: 16.44%  val_loss: 1.1928  val_acc: 13.95%
-[22:00:32] Epoch  4/20  [██████░░░░░░░░░░░░░░░░░░░░░░░░]  20.0%  ETA: 48s
-[22:00:32] loss: 1.1144  acc: 16.31%  val_loss: 1.1795  val_acc: 14.39%
-[22:00:35] Epoch  5/20  [████████░░░░░░░░░░░░░░░░░░░░░░]  25.0%  ETA: 45s
-[22:00:35] loss: 1.1340  acc: 15.83%  val_loss: 1.1968  val_acc: 14.42%
-[22:00:35] [INFO] 25% complete — loss trending down.
-[22:00:38] Epoch  6/20  [█████████░░░░░░░░░░░░░░░░░░░░░]  30.0%  ETA: 42s
-[22:00:38] loss: 1.1117  acc: 16.46%  val_loss: 1.1778  val_acc: 14.26%
-[22:00:41] Epoch  7/20  [███████████░░░░░░░░░░░░░░░░░░░]  35.0%  ETA: 39s
-[22:00:41] loss: 1.1360  acc: 16.98%  val_loss: 1.1884  val_acc: 15.09%
-[22:00:44] Epoch  8/20  [████████████░░░░░░░░░░░░░░░░░░]  40.0%  ETA: 36s
-[22:00:44] loss: 1.1376  acc: 17.63%  val_loss: 1.1894  val_acc: 14.55%
+[08:58:09] [SYSTEM] Model    : RF
+[08:58:09] [SYSTEM] Epochs   : 20
+[08:58:09] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[08:58:09] [SYSTEM] LR       : 0.001
+[08:58:09] [SYSTEM] Val Split: 20%
+[08:58:09] [SYSTEM] Algorithm: Random Forest
+[08:58:09] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[08:58:09] [INFO] Fetching street demographic features from database…
+[08:58:09] [DATA] 233 records loaded.  train=186  val=47
+[08:58:09] [INFO] Features: flood_frequency, poverty_rate_pct, pwd_count,
+[08:58:09] [INFO]           senior_count, fourps_households, informal_settlers_pct, vuln_score
+[08:58:09] [INFO] Initialising Random Forest pipeline (StandardScaler + classifier)…
+[08:58:10] Epoch  1/20  [██░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   5.0%  ETA: 57s
+[08:58:10] loss: 1.1471  acc: 15.20%  val_loss: 1.1881  val_acc: 12.64%
+[08:58:10] [INFO] First epoch complete — model warming up.
+[08:58:13] Epoch  2/20  [███░░░░░░░░░░░░░░░░░░░░░░░░░░░]  10.0%  ETA: 54s
+[08:58:13] loss: 1.1428  acc: 15.25%  val_loss: 1.1801  val_acc: 13.22%
+[08:58:16] Epoch  3/20  [█████░░░░░░░░░░░░░░░░░░░░░░░░░]  15.0%  ETA: 51s
+[08:58:16] loss: 1.1191  acc: 15.90%  val_loss: 1.1718  val_acc: 12.83%
+[08:58:19] loss: 1.1351  acc: 15.45%  val_loss: 1.1854  val_acc: 12.83%
+[08:58:19] Epoch  4/20  [██████░░░░░░░░░░░░░░░░░░░░░░░░]  20.0%  ETA: 48s
+[08:58:22] Epoch  5/20  [████████░░░░░░░░░░░░░░░░░░░░░░]  25.0%  ETA: 45s
+[08:58:22] loss: 1.1112  acc: 16.57%  val_loss: 1.1535  val_acc: 15.40%
+[08:58:22] [INFO] 25% complete — loss trending down.
+[08:58:25] Epoch  6/20  [█████████░░░░░░░░░░░░░░░░░░░░░]  30.0%  ETA: 42s
+[08:58:25] loss: 1.1277  acc: 15.68%  val_loss: 1.1903  val_acc: 12.98%
+[08:58:28] Epoch  7/20  [███████████░░░░░░░░░░░░░░░░░░░]  35.0%  ETA: 39s
+[08:58:28] loss: 1.1404  acc: 17.43%  val_loss: 1.1770  val_acc: 14.15%
+[08:58:31] Epoch  8/20  [████████████░░░░░░░░░░░░░░░░░░]  40.0%  ETA: 36s
+[08:58:31] loss: 1.1275  acc: 16.61%  val_loss: 1.1784  val_acc: 14.35%
+[08:58:34] Epoch  9/20  [██████████████░░░░░░░░░░░░░░░░]  45.0%  ETA: 33s
+[08:58:34] loss: 1.1270  acc: 17.04%  val_loss: 1.1775  val_acc: 15.90%
+[08:58:37] Epoch 10/20  [███████████████░░░░░░░░░░░░░░░]  50.0%  ETA: 30s
+[08:58:37] loss: 1.1325  acc: 18.06%  val_loss: 1.1964  val_acc: 14.85%
+[08:58:37] [INFO] Halfway — best val_acc so far: 15.90%
+[08:58:40] Epoch 11/20  [█████████████████░░░░░░░░░░░░░]  55.0%  ETA: 27s
+[08:58:40] loss: 1.0956  acc: 17.76%  val_loss: 1.1475  val_acc: 14.79%
+[08:58:43] Epoch 12/20  [██████████████████░░░░░░░░░░░░]  60.0%  ETA: 24s
+[08:58:43] loss: 1.1240  acc: 18.16%  val_loss: 1.1561  val_acc: 16.13%
+[08:58:46] Epoch 13/20  [████████████████████░░░░░░░░░░]  65.0%  ETA: 21s
+[08:58:46] loss: 1.1041  acc: 16.79%  val_loss: 1.1588  val_acc: 15.25%
+[08:58:49] Epoch 14/20  [█████████████████████░░░░░░░░░]  70.0%  ETA: 18s
+[08:58:49] loss: 1.1213  acc: 18.83%  val_loss: 1.1709  val_acc: 17.59%
+[08:58:52] Epoch 15/20  [███████████████████████░░░░░░░]  75.0%  ETA: 15s
+[08:58:52] loss: 1.1172  acc: 18.90%  val_loss: 1.1609  val_acc: 15.66%
+[08:58:52] [INFO] 75% complete — fine-tuning decision boundaries.
+[08:58:55] Epoch 16/20  [████████████████████████░░░░░░]  80.0%  ETA: 12s
+[08:58:55] loss: 1.1054  acc: 18.19%  val_loss: 1.1645  val_acc: 17.17%
+[08:58:58] Epoch 17/20  [██████████████████████████░░░░]  85.0%  ETA: 9s
+[08:58:58] loss: 1.0868  acc: 18.28%  val_loss: 1.1428  val_acc: 15.64%
+[08:59:01] Epoch 18/20  [███████████████████████████░░░]  90.0%  ETA: 6s
+[08:59:01] loss: 1.0774  acc: 19.16%  val_loss: 1.1383  val_acc: 18.49%
+[08:59:04] Epoch 19/20  [█████████████████████████████░]  95.0%  ETA: 3s
+[08:59:04] loss: 1.0916  acc: 18.20%  val_loss: 1.1391  val_acc: 16.33%
+[08:59:07] Epoch 20/20  [██████████████████████████████] 100.0%  ETA: 0s
+[08:59:07] loss: 1.0987  acc: 19.38%  val_loss: 1.1414  val_acc: 16.66%
+[08:59:07] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[08:59:07] [EVAL] Running final evaluation on validation set…
+[08:59:08] [EVAL] Validation Accuracy : 16.66%
+[08:59:08] [EVAL] Validation Loss     : 1.1414
+[08:59:08] [EVAL] Best Val Accuracy   : 18.49%
+[08:59:08] [INFO] Feature importances:
+[08:59:08] vuln_score                 0.2846  ██████
+[08:59:08] poverty_rate_pct           0.1872  ████
+[08:59:08] flood_frequency            0.1794  ████
+[08:59:08] avg_flood_height_m         0.1229  ███
+[08:59:08] informal_settlers_pct      0.1049  ██
+[08:59:08] pwd_count                  0.0779  ██
+[08:59:08] fourps_households          0.0431  █
+[08:59:09] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[08:59:09] [DONE] Training complete in 20 epochs  [Random Forest]
+[08:59:09] [DONE] Model saved → models/welfare_models/welfare_rf_train_1779670749124.pkl
+[08:59:09] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

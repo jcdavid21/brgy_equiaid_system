@@ -52,6 +52,19 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
                     </p>
                 </div>
                 <div class="dash-header-right">
+                    <div class="ti-admin-actions" style="display:flex;gap:8px;align-items:center;margin-right:12px;">
+                        <button class="btn-dash-outline" id="btnAddEvent" title="Add new typhoon event">
+                            <i class="fa-solid fa-hurricane"></i> Add Typhoon
+                        </button>
+                        
+                        <button class="btn-dash-outline" id="btnAddImpact" title="Log street impact">
+                            <i class="fa-solid fa-plus"></i> Log Impact
+                        </button>
+                        
+                        <button class="btn-dash-outline" id="btnManageStatus" title="Set event active/inactive">
+                            <i class="fa-solid fa-toggle-on"></i> Set Status
+                        </button>
+                    </div>
                     <div class="ti-event-selector-wrap">
                         <label class="ti-event-label" for="tiEventSelect">
                             <i class="fa-solid fa-hurricane"></i> Select Typhoon Event
@@ -321,6 +334,200 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
         </div><!-- /.dashboard-container -->
     </main>
 </div><!-- /.admin-shell -->
+
+<!-- ══ ADD TYPHOON EVENT MODAL ══════════════════════════ -->
+<div class="modal-backdrop" id="tiAddEventModal" role="dialog" aria-modal="true">
+    <div class="modal-box" style="max-width:540px;">
+        <div class="modal-header">
+            <div class="modal-title-group">
+                <span class="modal-eyebrow">Typhoon Events</span>
+                <h3 class="modal-title">Add New Typhoon Event</h3>
+            </div>
+            <button class="modal-close" id="tiAddEventModalClose" aria-label="Close">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="modal-body" style="padding:24px;">
+            <div id="tiAddEventMsg" style="display:none;margin-bottom:12px;padding:10px 14px;border-radius:6px;font-size:13px;"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                <div style="grid-column:1/-1;">
+                    <label class="ti-form-label">Event Name *</label>
+                    <input type="text" id="aeEventName" class="ti-form-input" placeholder="e.g. Typhoon Egay" maxlength="120">
+                </div>
+                <div>
+                    <label class="ti-form-label">Local Name</label>
+                    <input type="text" id="aeLocalName" class="ti-form-input" placeholder="e.g. Egay" maxlength="120">
+                </div>
+                <div>
+                    <label class="ti-form-label">Category (1–5)</label>
+                    <select id="aeCategory" class="ti-form-input">
+                        <option value="">— None —</option>
+                        <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="ti-form-label">Date Started *</label>
+                    <input type="date" id="aeDateStarted" class="ti-form-input">
+                </div>
+                <div>
+                    <label class="ti-form-label">Date Ended</label>
+                    <input type="date" id="aeDateEnded" class="ti-form-input">
+                </div>
+                <div>
+                    <label class="ti-form-label">Landfall Date</label>
+                    <input type="date" id="aeLandfallDate" class="ti-form-input">
+                </div>
+                <div>
+                    <label class="ti-form-label">Wind Speed (kph)</label>
+                    <input type="number" id="aeWindSpeed" class="ti-form-input" placeholder="e.g. 185" min="0" max="400" step="0.01">
+                </div>
+                <div>
+                    <label class="ti-form-label">Status *</label>
+                    <select id="aeStatus" class="ti-form-input">
+                        <option value="Monitoring">Monitoring</option>
+                        <option value="Active">Active</option>
+                        <option value="Passed">Passed</option>
+                    </select>
+                </div>
+                <div style="grid-column:1/-1;">
+                    <label class="ti-form-label">Notes</label>
+                    <textarea id="aeNotes" class="ti-form-input" rows="3" placeholder="Optional notes…" style="resize:vertical;"></textarea>
+                </div>
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;">
+                <button class="btn-dash-outline" id="tiAddEventCancel">Cancel</button>
+                <button class="btn-dash-primary" id="tiAddEventSubmit">
+                    <i class="fa-solid fa-floppy-disk"></i> Save Event
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══ SET EVENT STATUS MODAL ════════════════════════════ -->
+<div class="modal-backdrop" id="tiManageStatusModal" role="dialog" aria-modal="true">
+    <div class="modal-box" style="max-width:420px;">
+        <div class="modal-header">
+            <div class="modal-title-group">
+                <span class="modal-eyebrow">Manage Events</span>
+                <h3 class="modal-title">Set Typhoon Status</h3>
+            </div>
+            <button class="modal-close" id="tiManageStatusModalClose" aria-label="Close">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="modal-body" style="padding:24px;">
+            <div id="tiManageStatusMsg" style="display:none;margin-bottom:12px;padding:10px 14px;border-radius:6px;font-size:13px;"></div>
+            <div style="margin-bottom:14px;">
+                <label class="ti-form-label">Select Event *</label>
+                <select id="msEventSelect" class="ti-form-input">
+                    <option value="">— Choose event —</option>
+                </select>
+            </div>
+            <div>
+                <label class="ti-form-label">New Status *</label>
+                <select id="msStatus" class="ti-form-input">
+                    <option value="Active">Active</option>
+                    <option value="Monitoring">Monitoring</option>
+                    <option value="Passed">Passed</option>
+                </select>
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;">
+                <button class="btn-dash-outline" id="tiManageStatusCancel">Cancel</button>
+                <button class="btn-dash-primary" id="tiManageStatusSubmit">
+                    <i class="fa-solid fa-check"></i> Update Status
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══ LOG STREET IMPACT MODAL ═══════════════════════════ -->
+<div class="modal-backdrop" id="tiAddImpactModal" role="dialog" aria-modal="true">
+    <div class="modal-box" style="max-width:580px;">
+        <div class="modal-header">
+            <div class="modal-title-group">
+                <span class="modal-eyebrow">Street-Level Data</span>
+                <h3 class="modal-title">Log Typhoon Street Impact</h3>
+            </div>
+            <button class="modal-close" id="tiAddImpactModalClose" aria-label="Close">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="modal-body" style="padding:24px;">
+            <div id="tiAddImpactMsg" style="display:none;margin-bottom:12px;padding:10px 14px;border-radius:6px;font-size:13px;"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                <div style="grid-column:1/-1;">
+                    <label class="ti-form-label">Typhoon Event *</label>
+                    <select id="aiEventSelect" class="ti-form-input">
+                        <option value="">— Select event —</option>
+                    </select>
+                </div>
+                <div style="grid-column:1/-1;">
+                    <label class="ti-form-label">Street *</label>
+                    <select id="aiStreetSelect" class="ti-form-input">
+                        <option value="">— Select street —</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="ti-form-label">Flood Status *</label>
+                    <select id="aiFloodStatus" class="ti-form-input">
+                        <option value="None">None</option>
+                        <option value="Flooded">Flooded</option>
+                        <option value="Severely Flooded">Severely Flooded</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="ti-form-label">Damage Status *</label>
+                    <select id="aiDamageStatus" class="ti-form-input">
+                        <option value="None">None</option>
+                        <option value="Minor Damage">Minor Damage</option>
+                        <option value="Moderate Damage">Moderate Damage</option>
+                        <option value="Severely Damaged">Severely Damaged</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="ti-form-label">Flood Height (m)</label>
+                    <input type="number" id="aiFloodHeight" class="ti-form-input" placeholder="e.g. 1.5" min="0" max="20" step="0.01">
+                </div>
+                <div>
+                    <label class="ti-form-label">Road Accessible?</label>
+                    <select id="aiRoadAccessible" class="ti-form-input">
+                        <option value="1">Yes</option>
+                        <option value="0">No</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="ti-form-label">Affected Households</label>
+                    <input type="number" id="aiAffectedHH" class="ti-form-input" placeholder="0" min="0">
+                </div>
+                <div>
+                    <label class="ti-form-label">Affected Persons</label>
+                    <input type="number" id="aiAffectedPersons" class="ti-form-input" placeholder="0" min="0">
+                </div>
+                <div>
+                    <label class="ti-form-label">Report Source *</label>
+                    <select id="aiReportSource" class="ti-form-input">
+                        <option value="Staff">Staff</option>
+                        <option value="AI">AI</option>
+                        <option value="Resident">Resident</option>
+                        <option value="PAGASA">PAGASA</option>
+                    </select>
+                </div>
+                <div style="grid-column:1/-1;">
+                    <label class="ti-form-label">Notes</label>
+                    <textarea id="aiNotes" class="ti-form-input" rows="3" placeholder="Optional notes…" style="resize:vertical;"></textarea>
+                </div>
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;">
+                <button class="btn-dash-outline" id="tiAddImpactCancel">Cancel</button>
+                <button class="btn-dash-primary" id="tiAddImpactSubmit">
+                    <i class="fa-solid fa-floppy-disk"></i> Save Impact Record
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- ══ STREET IMPACT DETAIL MODAL ══════════════════════ -->
 <div class="modal-backdrop" id="tiDetailModal" role="dialog" aria-modal="true">

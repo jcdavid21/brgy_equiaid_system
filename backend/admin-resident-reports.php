@@ -48,6 +48,44 @@ $meta = isset($_GET['meta']) ? (int)$_GET['meta'] : 0;
 
 try {
 
+    // ── GET: images ───────────────────────────────────
+    if ($method === 'GET' && isset($_GET['images'])) {
+        $limit = min(96, max(1, (int)($_GET['limit'] ?? 48)));
+
+        $stmt = $pdo->prepare("
+            SELECT
+                ui.image_id,
+                ui.street_id,
+                ui.file_path,
+                ui.original_filename,
+                ui.uploaded_at,
+                ui.is_processed,
+                s.street_name
+            FROM uploaded_images ui
+            LEFT JOIN streets s ON s.street_id = ui.street_id
+            WHERE ui.is_active = 1
+            ORDER BY ui.uploaded_at DESC
+            LIMIT ?
+        ");
+        $stmt->execute([$limit]);
+        $images = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $images = array_map(function ($img) {
+            return [
+                'image_id'    => (int)$img['image_id'],
+                'street_id'   => (int)$img['street_id'],
+                'street_name' => $img['street_name'] ?? '—',
+                'file_path'   => $img['file_path'],
+                'uploaded_at' => $img['uploaded_at'],
+                'analysis_status' => $img['is_processed'] ? 'Completed' : 'Queued',
+            ];
+        }, $images);
+
+        respond(true, ['images' => $images, 'streets' => array_values(array_unique(
+            array_column($images, 'street_name')
+        ))]);
+    }
+
     // ── GET: meta (streets, users, events) ────────────
     if ($method === 'GET' && $meta) {
         $streets = $pdo->query(
@@ -89,6 +127,50 @@ try {
         if (!$report) respond(false, null, 'Report not found.', 404);
 
         respond(true, $report);
+    }
+
+    // ── GET: heatmap data ─────────────────────────────
+    if ($method === 'GET' && isset($_GET['heatmap'])) {
+        $rows = $pdo->query("
+            SELECT
+                r.report_id,
+                r.report_type,
+                r.severity,
+                r.status,
+                r.latitude,
+                r.longitude,
+                r.created_at,
+                s.street_name,
+                s.latitude  AS street_lat,
+                s.longitude AS street_lng,
+                u.name      AS reporter_name
+            FROM resident_reports r
+            LEFT JOIN streets s ON s.street_id = r.street_id
+            LEFT JOIN users   u ON u.id = r.user_id
+            WHERE r.latitude IS NOT NULL OR s.latitude IS NOT NULL
+            ORDER BY r.created_at DESC
+        ")->fetchAll(PDO::FETCH_ASSOC);
+
+        // Fallback: if report has no lat/lng use the street's
+        $points = array_map(function ($r) {
+            $lat = $r['latitude']  ?? $r['street_lat'];
+            $lng = $r['longitude'] ?? $r['street_lng'];
+            if (!$lat || !$lng) return null;
+            return [
+                'report_id'     => (int)$r['report_id'],
+                'report_type'   => $r['report_type'],
+                'severity'      => $r['severity'],
+                'status'        => $r['status'],
+                'street_name'   => $r['street_name'],
+                'reporter_name' => $r['reporter_name'],
+                'created_at'    => $r['created_at'],
+                'lat'           => (float)$lat,
+                'lng'           => (float)$lng,
+            ];
+        }, $rows);
+
+        $points = array_values(array_filter($points));
+        respond(true, ['points' => $points]);
     }
 
     // ── GET: list all reports ─────────────────────────

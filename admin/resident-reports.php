@@ -32,6 +32,7 @@ if (!isset($_SESSION['user_role']) || !in_array($_SESSION['user_role'], ['admin'
     <link rel="stylesheet" href="../styles/admin_sidebar.css">
     <link rel="stylesheet" href="../styles/admin_dashboard.css">
     <link rel="stylesheet" href="../styles/admin-resident-reports.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 </head>
 <body>
 
@@ -106,6 +107,40 @@ if (!isset($_SESSION['user_role']) || !in_array($_SESSION['user_role'], ['admin'
                         <span class="kpi-number sk-inline" id="kpiSevere">—</span>
                         <span class="kpi-sub">Critical severity</span>
                     </div>
+                </div>
+            </div>
+
+            <!-- ── REPORT HEATMAP ────────────────────────── -->
+            <div class="dash-card map-card" style="margin-bottom:24px;">
+                <div class="card-head">
+                    <div>
+                        <div class="card-label">Incident Overview</div>
+                        <h2 class="card-title">Report Heatmap</h2>
+                    </div>
+                    <div class="sm-map-controls">
+                        <button class="btn-dash-outline sm-map-toggle active" id="btnRrLayerAll">
+                            <i class="fa-solid fa-layer-group"></i> All
+                        </button>
+                        <button class="btn-dash-outline sm-map-toggle" id="btnRrLayerSevere">
+                            <i class="fa-solid fa-circle-exclamation"></i> Severe
+                        </button>
+                        <button class="btn-dash-outline sm-map-toggle" id="btnRrLayerType">
+                            <i class="fa-solid fa-tags"></i> By Type
+                        </button>
+                    </div>
+                </div>
+                <div class="dashboard-map-wrap" style="margin:0 -28px;">
+                    <div id="rr-heatmap" style="height:400px;width:100%;z-index:1;"></div>
+                    <div class="map-loading-overlay" id="rrMapOverlay">
+                        <div class="map-spinner"></div>
+                        <span>Loading map…</span>
+                    </div>
+                </div>
+                <div class="map-legend-row" id="rrMapLegend">
+                    <div class="map-legend-item"><span class="map-legend-dot" style="background:#dc2626;"></span> Severe <span class="map-legend-count" id="leg-rr-severe">—</span></div>
+                    <div class="map-legend-item"><span class="map-legend-dot" style="background:#d97706;"></span> Moderate <span class="map-legend-count" id="leg-rr-moderate">—</span></div>
+                    <div class="map-legend-item"><span class="map-legend-dot" style="background:#16a34a;"></span> Low <span class="map-legend-count" id="leg-rr-low">—</span></div>
+                    <div class="map-legend-item"><span class="map-legend-dot" style="background:#9ca3af;"></span> Pending <span class="map-legend-count" id="leg-rr-pending">—</span></div>
                 </div>
             </div>
 
@@ -188,6 +223,27 @@ if (!isset($_SESSION['user_role']) || !in_array($_SESSION['user_role'], ['admin'
                 </div>
 
             </div><!-- /.dash-card -->
+
+            <!-- ── STREET DOCUMENTATION ─────────────────── -->
+            <div class="dash-card">
+                <div class="card-head">
+                    <div>
+                        <div class="card-label">Street Documentation</div>
+                        <h2 class="card-title">Recent Uploaded Images</h2>
+                    </div>
+                    <select class="sm-select-inline" id="rrImgStreetFilter" style="color: white !important;">
+                        <option value="">All Streets</option>
+                    </select>
+                </div>
+                <div class="sm-image-grid" id="rrImageGrid">
+                    <div class="sm-img-skeleton"></div>
+                    <div class="sm-img-skeleton"></div>
+                    <div class="sm-img-skeleton"></div>
+                    <div class="sm-img-skeleton"></div>
+                    <div class="sm-img-skeleton"></div>
+                    <div class="sm-img-skeleton"></div>
+                </div>
+            </div>
         </div><!-- /.dashboard-container -->
     </main>
 </div><!-- /.admin-shell -->
@@ -341,12 +397,25 @@ if (!isset($_SESSION['user_role']) || !in_array($_SESSION['user_role'], ['admin'
     </div>
 </div>
 
+<!-- ══ IMAGE LIGHTBOX ════════════════════════════════════ -->
+<div class="modal-backdrop" id="rrImgLightbox" role="dialog" aria-modal="true">
+    <div class="sm-lightbox-box">
+        <button class="modal-close" id="rrImgLightboxClose"
+                style="position:absolute;top:12px;right:12px;z-index:2;" aria-label="Close">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <img id="rrImgLightboxSrc" src="" alt="Street image preview">
+        <div class="sm-lightbox-meta" id="rrImgLightboxMeta"></div>
+    </div>
+</div>
+
 
 <!-- ══ TOAST CONTAINER ════════════════════════════════ -->
 <div class="rr-toast-container" id="rrToastContainer"></div>
 
 
 <!-- ══ SCRIPTS ════════════════════════════════════════ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="../js/activity-logs.js"></script>
 <script src="../js/admin-resident-reports.js"></script>
 
