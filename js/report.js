@@ -278,6 +278,7 @@ function resetUpload() {
     cardResult.hidden = true;
     aiSummary.textContent = '';
     aiSummary.style.background = '';
+    unlockSeverity();
     updateWarningPanel();
 }
 
@@ -344,12 +345,22 @@ function renderResults(flood) {
     // ── AI summary banner ─────────────────────────────────
     const isFlood = flood.flood_pct > 15 && !flood.false_positive;
 
+    // Find detection-view panels (Fast + Detailed) to hide when not a flood
+    const riItems = document.querySelectorAll('.ri-item');
+    const detectionPanels = Array.from(riItems).filter(el => {
+        const label = el.querySelector('.ri-label');
+        return label && (label.textContent.includes('Detection'));
+    });
+
     if (flood.false_positive) {
         // Override displayed stats so users don't see confusing % numbers
         floodPct.textContent  = '0%';
         floodConf.textContent = '—';
         floodSevBanner.className = `severity-banner sev-none`;
         floodSevLabel.textContent = 'Flood Level: None Detected';
+
+        // Hide the YOLO detection panels — boxes on clothing/objects are misleading
+        detectionPanels.forEach(p => { p.style.display = 'none'; });
 
         aiSummary.className  = 'ai-summary ai-summary--info';
         aiSummary.innerHTML  =
@@ -366,6 +377,7 @@ function renderResults(flood) {
             `a flood report. Please upload a clearer photo with visible floodwater, or change ` +
             `the report type to another category.`;
     } else if (isFlood) {
+        detectionPanels.forEach(p => { p.style.display = ''; });
         aiSummary.className  = 'ai-summary';
         aiSummary.innerHTML  =
             `<i class="fa-solid fa-triangle-exclamation" style="margin-right:7px;"></i>` +
@@ -373,6 +385,7 @@ function renderResults(flood) {
             `(confidence: ${confPct.toFixed(1)}%). ` +
             `Please review the details below before submitting.`;
     } else {
+        detectionPanels.forEach(p => { p.style.display = ''; });
         aiSummary.className  = 'ai-summary ai-summary--info';
         aiSummary.innerHTML  =
             `<i class="fa-solid fa-circle-check" style="margin-right:7px;"></i>` +
@@ -394,11 +407,15 @@ function autoFillForm(flood) {
     if (isConfirmedFlood) {
         typeSelect.value = 'Flood';
         const sevMap = { None: 'Low', Low: 'Low', Moderate: 'Moderate', High: 'Moderate', Severe: 'Severe' };
-        setSeverity(sevMap[flood.severity] || 'Moderate');
+        lockSeverity(sevMap[flood.severity] || 'Moderate');
     } else if (isFlood && isLowConf) {
         // Detected something but confidence too low — don't auto-set Flood
         typeSelect.value = 'Other';
-        setSeverity('Low');
+        lockSeverity('Low');
+    } else if (flood.false_positive) {
+        lockSeverity('Low');   // non-flood image — lock at Low, user shouldn't inflate this
+    } else {
+        lockSeverity('Low');   // no significant flood detected
     }
     // Re-validate after auto-fill
     validateDescription();
@@ -422,7 +439,11 @@ typeSelect.addEventListener('change', () => {
 });
 
 // ── Severity picker ───────────────────────────────────────
+// ── Severity lock (set by AI; user cannot override after analysis) ───────
+let severityLockedByAI = false;
+
 severityPicker.addEventListener('click', e => {
+    if (severityLockedByAI) return;   // ignore clicks when AI has locked it
     const btn = e.target.closest('.sp-btn');
     if (!btn) return;
     setSeverity(btn.dataset.val);
@@ -433,6 +454,43 @@ function setSeverity(val) {
         b.classList.toggle('active', b.dataset.val === val);
     });
     fSeverity.value = val;
+}
+
+function lockSeverity(val) {
+    setSeverity(val);
+    severityLockedByAI = true;
+    severityPicker.style.opacity    = '0.65';
+    severityPicker.style.cursor     = 'not-allowed';
+    severityPicker.title = 'Severity is set by the AI analysis and cannot be changed manually.';
+    document.querySelectorAll('.sp-btn').forEach(b => {
+        b.style.pointerEvents = 'none';
+    });
+
+    // Show a small lock notice if not already there
+    let notice = document.getElementById('sev-lock-notice');
+    if (!notice) {
+        notice = document.createElement('p');
+        notice.id = 'sev-lock-notice';
+        notice.style.cssText =
+            'margin:4px 0 0 0; font-size:0.78rem; color:#6b7280; display:flex; align-items:center; gap:5px;';
+        severityPicker.parentElement.appendChild(notice);
+    }
+    notice.innerHTML =
+        '<i class="fa-solid fa-lock" style="color:#9ca3af;"></i>' +
+        ' Severity is determined by the AI result and cannot be changed manually.';
+    notice.hidden = false;
+}
+
+function unlockSeverity() {
+    severityLockedByAI = false;
+    severityPicker.style.opacity     = '';
+    severityPicker.style.cursor      = '';
+    severityPicker.title             = '';
+    document.querySelectorAll('.sp-btn').forEach(b => {
+        b.style.pointerEvents = '';
+    });
+    const notice = document.getElementById('sev-lock-notice');
+    if (notice) notice.hidden = true;
 }
 
 // ── Geolocation (auto on page load) ──────────────────────

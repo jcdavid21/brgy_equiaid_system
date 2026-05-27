@@ -126,38 +126,6 @@ def img_to_b64(img_rgb):
     _, buf = cv2.imencode('.png', cv2.cvtColor(img_rgb, cv2.COLOR_RGB2BGR))
     return base64.b64encode(buf).decode()
 
-def _has_skin_tone_pixels(img_rgb, min_fraction=0.08):
-    """
-    Returns True if the image contains a significant fraction of skin-tone pixels,
-    which strongly suggests an indoor/people scene rather than a flood scene.
-    """
-    hsv = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2HSV)
-    # Skin tone in HSV: hue 0-25, saturation 30-170, value 80-255
-    lower = np.array([0,  30,  80], dtype=np.uint8)
-    upper = np.array([25, 170, 255], dtype=np.uint8)
-    skin_mask = cv2.inRange(hsv, lower, upper)
-    skin_frac = float(np.sum(skin_mask > 0)) / skin_mask.size
-    print(f'[FP-CHECK] skin_fraction={skin_frac:.3f}', flush=True)
-    return skin_frac >= min_fraction
-
-
-def _is_scattered_small_blobs(flood_bool, min_blob_area_frac=0.01):
-    """
-    Returns True if all detected flood blobs are small (no single contiguous
-    blob covers more than min_blob_area_frac of the total image).
-    This catches cases where clothing items or small objects are mis-detected.
-    """
-    mask_uint8 = (flood_bool.astype(np.uint8)) * 255
-    num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(mask_uint8, connectivity=8)
-    total_pixels = flood_bool.size
-    for i in range(1, num_labels):  # skip background label 0
-        area_frac = stats[i, cv2.CC_STAT_AREA] / total_pixels
-        if area_frac >= min_blob_area_frac:
-            return False  # Found at least one large blob — could be real flood
-    print('[FP-CHECK] → All blobs are small/scattered', flush=True)
-    return True
-
-
 def is_flood_false_positive(img_rgb_resized, mask):
     flood_bool = mask > 0
     if not flood_bool.any():
@@ -184,73 +152,165 @@ def is_flood_false_positive(img_rgb_resized, mask):
     is_bottom_heavy = pct_bottom_half >= 0.45
     img_v_mean      = float(np.mean(hsv[:, :, 2]))
 
-    # ── Rule 0a: People/indoor scene — significant skin tones present ──────────
-    # If the image contains lots of skin-tone pixels, it is almost certainly
-    # an indoor or portrait scene, not a flood photo.
-    if _has_skin_tone_pixels(img_rgb_resized, min_fraction=0.08):
-        print('[FP-CHECK] → FP Rule 0a (skin tones detected — people/indoor scene)', flush=True)
-        return True
+    # ── Muddy-brown water pixel fraction ─────────────────────────────────────
+    # Real Philippine floodwater: hue 5–40° (brown/tan), BUT must be DULL —
+    # sat < 160 and val < 190. This excludes vivid orange/red clothing (sat≥160
+    # or val≥190) and skin tones that overlap with the warm hue range.
+    # Also exclude hue < 5 (pure red/magenta — clothing, not muddy water).
+    is_muddy_px = (
+        (h_ch >= 5) & (h_ch <= 40) &
+        (s_ch >= 15) & (s_ch < 160) &   # saturated red/orange clothing → excluded
+        (v_ch >= 20) & (v_ch < 190)      # very bright warm tones → excluded
+    )
+    muddy_frac = float(np.sum(is_muddy_px) / len(h_ch)) if len(h_ch) else 0.0
 
-    # ── Rule 0b: All detected blobs are small isolated patches ────────────────
-    # Real flood water forms large contiguous regions. If every detected region
-    # is a tiny isolated blob (e.g. a shirt, a folder), it's a false positive.
-    if _is_scattered_small_blobs(flood_bool, min_blob_area_frac=0.015):
-        return True
+    # ── Vivid/saturated non-flood pixel fractions ─────────────────────────────
+    # Vivid blue: clothing, sky, protest signs, folders (hue 85–140, sat ≥ 55)
+    is_vivid_blue_px = (h_ch >= 85) & (h_ch <= 140) & (s_ch >= 55)
+    vivid_blue_frac  = float(np.sum(is_vivid_blue_px) / len(h_ch)) if len(h_ch) else 0.0
+
+    # Vivid warm: clothing, signs, skin (hue 0–40 OR 160–180, sat ≥ 120, val ≥ 100)
+    # These are bright saturated reds, oranges, and skin — definitively NOT flood.
+    is_vivid_warm_px = (
+        ((h_ch <= 40) | (h_ch >= 160)) &
+        (s_ch >= 120) & (v_ch >= 100)
+    )
+    vivid_warm_frac = float(np.sum(is_vivid_warm_px) / len(h_ch)) if len(h_ch) else 0.0
+
+    # ── Non-flood pixel fraction: anything that is clearly not dull murky water
+    non_flood_frac = vivid_blue_frac + vivid_warm_frac
+
+    # ── Clear/grey floodwater early-exit ─────────────────────────────────────
+    # Philippine floods after heavy rain are often grey, clear, or reflective —
+    # NOT muddy brown. These have: neutral/grey hue, low saturation, bottom-heavy
+    # mask, large coverage, and low vivid-clothing fraction.
+    # Protect these BEFORE the muddy-centric rules so they don't get false-flagged.
+    is_grey_water_hue = med_sat < 60 and (med_hue < 30 or (80 <= med_hue <= 150))
+    is_clear_flood = (
+        is_grey_water_hue and
+        is_bottom_heavy and            # water sits at the bottom — positional anchor
+        flood_pct >= 0.12 and          # significant mask coverage
+        pct_bottom_third >= 0.35 and   # especially concentrated in lowest third
+        vivid_blue_frac < 0.30 and     # not dominated by vivid blue clothing/sky
+        vivid_warm_frac < 0.20         # not dominated by warm clothing/skin
+    )
+    if is_clear_flood:
+        print(
+            f'[FP-CHECK] → REAL FLOOD (clear/grey floodwater: '
+            f'sat={med_sat:.1f}  bot={pct_bottom_half:.2f}  bot3={pct_bottom_third:.2f}  '
+            f'pct={flood_pct:.3f}  vblue={vivid_blue_frac:.3f}  vwarm={vivid_warm_frac:.3f})',
+            flush=True
+        )
+        return False
 
     print(
         f'[FP-CHECK] pct={flood_pct:.3f}  hue={med_hue:.1f}  sat={med_sat:.1f}  '
         f'val={med_val:.1f}  img_v={img_v_mean:.1f}  '
         f'top={pct_top_half:.2f}  top3={pct_upper_third:.2f}  '
         f'bot={pct_bottom_half:.2f}  bot3={pct_bottom_third:.2f}  '
-        f'bottom_heavy={is_bottom_heavy}', flush=True
+        f'bottom_heavy={is_bottom_heavy}  '
+        f'muddy={muddy_frac:.3f}  vblue={vivid_blue_frac:.3f}  vwarm={vivid_warm_frac:.3f}',
+        flush=True
     )
 
+    # ── Rule 1: Detected region mostly in upper half, not bottom-heavy ────────
     if pct_top_half > 0.55 and not is_bottom_heavy:
         print('[FP-CHECK] → FP Rule 1 (upper half, not bottom-heavy)', flush=True)
         return True
 
+    # ── Rule 2: Significant portion in upper third ────────────────────────────
     if pct_upper_third > 0.35:
         print('[FP-CHECK] → FP Rule 2 (upper third)', flush=True)
         return True
 
+    # ── Rule 3: Low-sat blue/grey not in bottom half (sky, grey concrete) ─────
+    # Guard: only fire when mask is small (< 20%) to avoid killing large grey
+    # floodwater regions that ARE bottom-heavy (clear rainwater on streets).
     is_blue_grey_hue = 80 <= med_hue <= 150
     is_low_sat       = med_sat < 55
-    if is_blue_grey_hue and is_low_sat and not is_bottom_heavy:
-        print('[FP-CHECK] → FP Rule 3 (low-sat blue/grey, not bottom-heavy)', flush=True)
+    if is_blue_grey_hue and is_low_sat and not is_bottom_heavy and flood_pct < 0.20:
+        print('[FP-CHECK] → FP Rule 3 (low-sat blue/grey, not bottom-heavy, small mask)', flush=True)
         return True
 
+    # ── Rule 4: Warm/bright pixels = fire, sunlit road, clothing, not flood ───
+    # Extended: also catches vivid warm even when med_val ≤ 170 if sat is very high.
     is_warm  = (med_hue < 20 or med_hue > 160)
-    is_bright= med_val > 170
-    if is_warm and is_bright:
-        print('[FP-CHECK] → FP Rule 4 (warm/fire)', flush=True)
+    is_bright_warm = med_val > 160 and med_sat > 80
+    if is_warm and (med_val > 170 or is_bright_warm):
+        print('[FP-CHECK] → FP Rule 4 (warm/vivid — clothing or fire, not flood)', flush=True)
         return True
 
+    # ── Rule 5: Washed-out / overexposed ──────────────────────────────────────
     if med_val > 185 and med_sat < 45:
         print('[FP-CHECK] → FP Rule 5 (washed-out)', flush=True)
         return True
 
+    # ── Rule 6: Saturated blue not concentrated near bottom ──────────────────
     is_sat_blue = is_blue_grey_hue and med_sat >= 55
     if is_sat_blue and pct_bottom_third < 0.25:
         print('[FP-CHECK] → FP Rule 6 (saturated blue, not bottom-third)', flush=True)
         return True
 
+    # ── Rule 7: Tiny scattered mask not anchored to bottom ───────────────────
     if flood_pct < 0.06 and pct_bottom_half < 0.50:
         print('[FP-CHECK] → FP Rule 7 (tiny scattered)', flush=True)
         return True
 
+    # ── Rule 8: Green/vegetation hue ─────────────────────────────────────────
     is_green = 35 <= med_hue <= 80
     if is_green and med_sat > 55:
         print('[FP-CHECK] → FP Rule 8 (green/vegetation)', flush=True)
         return True
 
-    if img_v_mean < 50 and med_val < 75 and not is_bottom_heavy:
-        print('[FP-CHECK] → FP Rule 9 (dark, not bottom-heavy)', flush=True)
+    # ── Rule 9: Very dark scene without muddy water signature ─────────────────
+    # Only flag dark scenes that also lack muddy-brown content.
+    if img_v_mean < 55 and med_val < 80 and not is_bottom_heavy and muddy_frac < 0.12:
+        print('[FP-CHECK] → FP Rule 9 (dark non-muddy, not bottom-heavy)', flush=True)
         return True
 
+    # ── Rule 10: Wide horizontal band not in bottom half ─────────────────────
     if flood_pct > 0.05:
         col_spread = (flagged_cols.max() - flagged_cols.min()) / img_w
         if col_spread > 0.85 and pct_bottom_half < 0.35:
             print('[FP-CHECK] → FP Rule 10 (full-width band, not bottom)', flush=True)
+            return True
+
+    # ── Rule 11: Bright/medium scene — check muddy water fraction ────────────
+    # If the scene is moderately to well lit (img_v_mean > 110) AND the detected
+    # pixels don't contain enough true muddy-brown floodwater color, it is FP.
+    # Threshold raised to 0.18 to catch indoor DSWD scenes (muddy≈0.15) where
+    # warm pixels are skin/clothing, not actual muddy floodwater.
+    # EXEMPT: grey/neutral hue + bottom-heavy → likely clear floodwater.
+    if img_v_mean > 110:
+        print(f'[FP-CHECK] Rule 11: img_v={img_v_mean:.1f}  muddy_frac={muddy_frac:.3f}', flush=True)
+        grey_exempt = (med_sat < 60) and is_bottom_heavy and flood_pct >= 0.10
+        if muddy_frac < 0.18 and not grey_exempt:
+            print('[FP-CHECK] → FP Rule 11 (bright/medium scene, insufficient muddy-flood pixels)', flush=True)
+            return True
+
+    # ── Rule 12: Non-flood pixels dominate the mask ───────────────────────────
+    # If vivid blue + vivid warm together make up >50% of detected pixels AND
+    # muddy water fraction is low, the detection is clothing/signs/sky.
+    if non_flood_frac > 0.50 and muddy_frac < 0.15:
+        print(f'[FP-CHECK] → FP Rule 12 (non-flood pixels dominate: '
+              f'nf={non_flood_frac:.3f}  muddy={muddy_frac:.3f})', flush=True)
+        return True
+
+    # ── Rule 13: Vivid blue alone dominates even in dim scenes ───────────────
+    if vivid_blue_frac > 0.45 and muddy_frac < 0.10:
+        print(f'[FP-CHECK] → FP Rule 13 (vivid blue dominates, no muddy water: '
+              f'vblue={vivid_blue_frac:.3f}  muddy={muddy_frac:.3f})', flush=True)
+        return True
+
+    # ── Rule 14: Moderate brightness + zero genuine flood color ──────────────
+    # Catches indoor DSWD/distribution hall scenes and protest outdoor scenes
+    # where the mask has NO dull muddy water at all (muddy_frac very low).
+    # EXEMPT: grey/neutral hue + bottom-heavy + large coverage → clear floodwater.
+    if img_v_mean > 90 and muddy_frac < 0.05:
+        grey_exempt = (med_sat < 60) and is_bottom_heavy and flood_pct >= 0.10
+        if not grey_exempt:
+            print(f'[FP-CHECK] → FP Rule 14 (moderate+ brightness, no muddy pixels: '
+                  f'img_v={img_v_mean:.1f}  muddy={muddy_frac:.3f})', flush=True)
             return True
 
     print('[FP-CHECK] → REAL FLOOD', flush=True)
@@ -293,6 +353,12 @@ def predict_flood():
             if false_positive_resnet:
                 flood_pct_resnet = 0.0
             avg_flood_pct = (flood_pct_mbv2 + flood_pct_resnet) / 2
+            # One-model FP with low remaining average → treat as false positive.
+            if (false_positive_mbv2 or false_positive_resnet) and avg_flood_pct < 25.0:
+                false_positive   = True
+                avg_flood_pct    = 0.0
+                flood_pct_mbv2   = 0.0
+                flood_pct_resnet = 0.0
 
         if not false_positive:
             if min(flood_pct_mbv2, flood_pct_resnet) < 5.0 and avg_flood_pct < 10.0:
@@ -349,29 +415,15 @@ def predict_flood():
         yolo_conf = 0.0
         if not false_positive:
             if res_small[0].boxes is not None and len(res_small[0].boxes):
-                confs = res_small[0].boxes.conf.cpu().numpy()
-                if len(confs):
-                    raw_yolo_conf = float(np.mean(confs))
-                    # Only count YOLO confidence if CNN also agrees there is
-                    # meaningful flood coverage — prevents a single YOLO hit on a
-                    # blue shirt from inflating confidence when CNN flood_pct is low.
-                    yolo_conf = raw_yolo_conf if avg_flood_pct >= 15.0 else 0.0
-
-        # Use geometric mean of CNN and YOLO confidence so both models must agree.
-        # The old max() formula let a 0.76-conf YOLO hit on a shirt override a
-        # low CNN score and report 65%+ confidence on a non-flood image.
-        cnn_conf = avg_flood_pct / 100.0
-        if yolo_conf > 0 and cnn_conf > 0:
-            combined_conf = float(np.sqrt(cnn_conf * yolo_conf))
-        else:
-            combined_conf = max(cnn_conf, yolo_conf)
+                confs     = res_small[0].boxes.conf.cpu().numpy()
+                yolo_conf = float(np.mean(confs)) if len(confs) else 0.0
 
         return jsonify({
             'ok':             True,
             'type':           'flood',
             'severity':       severity,
             'flood_pct':      round(avg_flood_pct, 1),
-            'confidence':     round(combined_conf, 3),
+            'confidence':     round(max(flood_pct_mbv2 / 100, yolo_conf), 3),
             'false_positive': false_positive,
             'overlay_b64':    overlay_b64,
             'yolo_nano_b64':  yolo_nano_b64,
