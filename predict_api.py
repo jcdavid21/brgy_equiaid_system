@@ -126,6 +126,38 @@ def img_to_b64(img_rgb):
     _, buf = cv2.imencode('.png', cv2.cvtColor(img_rgb, cv2.COLOR_RGB2BGR))
     return base64.b64encode(buf).decode()
 
+def _has_skin_tone_pixels(img_rgb, min_fraction=0.08):
+    """
+    Returns True if the image contains a significant fraction of skin-tone pixels,
+    which strongly suggests an indoor/people scene rather than a flood scene.
+    """
+    hsv = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2HSV)
+    # Skin tone in HSV: hue 0-25, saturation 30-170, value 80-255
+    lower = np.array([0,  30,  80], dtype=np.uint8)
+    upper = np.array([25, 170, 255], dtype=np.uint8)
+    skin_mask = cv2.inRange(hsv, lower, upper)
+    skin_frac = float(np.sum(skin_mask > 0)) / skin_mask.size
+    print(f'[FP-CHECK] skin_fraction={skin_frac:.3f}', flush=True)
+    return skin_frac >= min_fraction
+
+
+def _is_scattered_small_blobs(flood_bool, min_blob_area_frac=0.01):
+    """
+    Returns True if all detected flood blobs are small (no single contiguous
+    blob covers more than min_blob_area_frac of the total image).
+    This catches cases where clothing items or small objects are mis-detected.
+    """
+    mask_uint8 = (flood_bool.astype(np.uint8)) * 255
+    num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(mask_uint8, connectivity=8)
+    total_pixels = flood_bool.size
+    for i in range(1, num_labels):  # skip background label 0
+        area_frac = stats[i, cv2.CC_STAT_AREA] / total_pixels
+        if area_frac >= min_blob_area_frac:
+            return False  # Found at least one large blob — could be real flood
+    print('[FP-CHECK] → All blobs are small/scattered', flush=True)
+    return True
+
+
 def is_flood_false_positive(img_rgb_resized, mask):
     flood_bool = mask > 0
     if not flood_bool.any():
@@ -151,6 +183,19 @@ def is_flood_false_positive(img_rgb_resized, mask):
     pct_bottom_third= float(np.mean(flagged_rows >= (img_h * 2 // 3)))
     is_bottom_heavy = pct_bottom_half >= 0.45
     img_v_mean      = float(np.mean(hsv[:, :, 2]))
+
+    # ── Rule 0a: People/indoor scene — significant skin tones present ──────────
+    # If the image contains lots of skin-tone pixels, it is almost certainly
+    # an indoor or portrait scene, not a flood photo.
+    if _has_skin_tone_pixels(img_rgb_resized, min_fraction=0.08):
+        print('[FP-CHECK] → FP Rule 0a (skin tones detected — people/indoor scene)', flush=True)
+        return True
+
+    # ── Rule 0b: All detected blobs are small isolated patches ────────────────
+    # Real flood water forms large contiguous regions. If every detected region
+    # is a tiny isolated blob (e.g. a shirt, a folder), it's a false positive.
+    if _is_scattered_small_blobs(flood_bool, min_blob_area_frac=0.015):
+        return True
 
     print(
         f'[FP-CHECK] pct={flood_pct:.3f}  hue={med_hue:.1f}  sat={med_sat:.1f}  '
@@ -304,15 +349,29 @@ def predict_flood():
         yolo_conf = 0.0
         if not false_positive:
             if res_small[0].boxes is not None and len(res_small[0].boxes):
-                confs     = res_small[0].boxes.conf.cpu().numpy()
-                yolo_conf = float(np.mean(confs)) if len(confs) else 0.0
+                confs = res_small[0].boxes.conf.cpu().numpy()
+                if len(confs):
+                    raw_yolo_conf = float(np.mean(confs))
+                    # Only count YOLO confidence if CNN also agrees there is
+                    # meaningful flood coverage — prevents a single YOLO hit on a
+                    # blue shirt from inflating confidence when CNN flood_pct is low.
+                    yolo_conf = raw_yolo_conf if avg_flood_pct >= 15.0 else 0.0
+
+        # Use geometric mean of CNN and YOLO confidence so both models must agree.
+        # The old max() formula let a 0.76-conf YOLO hit on a shirt override a
+        # low CNN score and report 65%+ confidence on a non-flood image.
+        cnn_conf = avg_flood_pct / 100.0
+        if yolo_conf > 0 and cnn_conf > 0:
+            combined_conf = float(np.sqrt(cnn_conf * yolo_conf))
+        else:
+            combined_conf = max(cnn_conf, yolo_conf)
 
         return jsonify({
             'ok':             True,
             'type':           'flood',
             'severity':       severity,
             'flood_pct':      round(avg_flood_pct, 1),
-            'confidence':     round(max(flood_pct_mbv2 / 100, yolo_conf), 3),
+            'confidence':     round(combined_conf, 3),
             'false_positive': false_positive,
             'overlay_b64':    overlay_b64,
             'yolo_nano_b64':  yolo_nano_b64,

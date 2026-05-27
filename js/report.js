@@ -345,12 +345,18 @@ function renderResults(flood) {
     const isFlood = flood.flood_pct > 15 && !flood.false_positive;
 
     if (flood.false_positive) {
+        // Override displayed stats so users don't see confusing % numbers
+        floodPct.textContent  = '0%';
+        floodConf.textContent = '—';
+        floodSevBanner.className = `severity-banner sev-none`;
+        floodSevLabel.textContent = 'Flood Level: None Detected';
+
         aiSummary.className  = 'ai-summary ai-summary--info';
         aiSummary.innerHTML  =
             `<i class="fa-solid fa-circle-info" style="margin-right:7px;"></i>` +
-            `The AI spotted blue areas in your photo but determined they are likely sky, ` +
-            `haze, or other non-water surfaces — not actual flooding. ` +
-            `Please confirm the details below before submitting.`;
+            `The AI did <strong>not detect flooding</strong> in this photo. ` +
+            `Blue or dark areas were found (e.g. clothing, objects, sky) but are not consistent ` +
+            `with actual floodwater. Please confirm the details below before submitting.`;
     } else if (isLowConf && isFloodSig) {
         aiSummary.className  = 'ai-summary ai-summary--warn';
         aiSummary.innerHTML  =
