@@ -204,24 +204,6 @@ $page_title = 'Disaster Map — Barangay EQUIAID';
             </button>
         </div>
 
-        <!-- Weather layer row -->
-        <div class="dm-toolbar-inner dm-weather-row">
-            <span class="dm-toolbar-label">Weather</span>
-            <button class="dm-weather-btn" data-weather="precipitation" title="Toggle precipitation overlay">
-                <i class="fa-solid fa-cloud-rain"></i> Precipitation
-            </button>
-            <button class="dm-weather-btn" data-weather="wind" title="Toggle wind speed overlay">
-                <i class="fa-solid fa-wind"></i> Wind
-            </button>
-            <button class="dm-weather-btn" data-weather="clouds" title="Toggle cloud cover overlay">
-                <i class="fa-solid fa-cloud"></i> Clouds
-            </button>
-            <button class="dm-weather-btn" data-weather="temp" title="Toggle temperature overlay">
-                <i class="fa-solid fa-temperature-half"></i> Temperature
-            </button>
-            <span class="dm-weather-status" id="dmWeatherStatus" role="status" aria-live="polite">Select a layer</span>
-            <span class="dm-weather-note">Powered by OpenWeatherMap</span>
-        </div>
     </div>
 </div>
 

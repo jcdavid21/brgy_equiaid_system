@@ -64,21 +64,6 @@ try {
             echo json_encode(['ok' => true, 'weather' => $weather], JSON_UNESCAPED_SLASHES);
             break;
 
-        case 'weather_tile':
-            $key = env_value('OPENWEATHER_API_KEY', env_value('OWM_KEY', ''));
-            $layers = ['precipitation_new','wind_new','clouds_new','temp_new'];
-            $layer = (string)($_GET['layer'] ?? '');
-            $z = filter_input(INPUT_GET, 'z', FILTER_VALIDATE_INT);
-            $x = filter_input(INPUT_GET, 'x', FILTER_VALIDATE_INT);
-            $y = filter_input(INPUT_GET, 'y', FILTER_VALIDATE_INT);
-            if ($key === '' || !in_array($layer, $layers, true) || $z === false || $x === false || $y === false || $z < 0 || $z > 19 || $x < 0 || $y < 0) {
-                http_response_code(422); echo json_encode(['ok' => false, 'error' => 'Invalid weather tile request.']); break;
-            }
-            [$status, $tile] = openWeatherFetch("https://tile.openweathermap.org/map/{$layer}/{$z}/{$x}/{$y}.png?appid=" . rawurlencode($key));
-            if ($status !== 200 || $tile === false) { http_response_code($status === 401 ? 401 : 502); echo json_encode(['ok' => false, 'error' => 'Weather tile unavailable.']); break; }
-            header('Content-Type: image/png'); header('Cache-Control: public, max-age=600'); echo $tile;
-            break;
-
         // ── SUMMARY KPIs ─────────────────────────────────────
         case 'summary':
             // Street risk counts

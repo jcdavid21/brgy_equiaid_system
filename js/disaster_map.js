@@ -67,39 +67,6 @@
     // Active risk filter
     let _riskFilter = 'all';
 
-    // Weather requests are proxied by PHP so the API key stays server-side.
-
-    const WEATHER_LAYERS = {
-        precipitation: {
-            label: 'Precipitation',
-            icon:  'fa-cloud-rain',
-            owmLayer: 'precipitation_new',
-            tile: null,
-            active: false,
-        },
-        wind: {
-            label: 'Wind',
-            icon:  'fa-wind',
-            owmLayer: 'wind_new',
-            tile: null,
-            active: false,
-        },
-        clouds: {
-            label: 'Clouds',
-            icon:  'fa-cloud',
-            owmLayer: 'clouds_new',
-            tile: null,
-            active: false,
-        },
-        temp: {
-            label: 'Temperature',
-            icon:  'fa-temperature-half',
-            owmLayer: 'temp_new',
-            tile: null,
-            active: false,
-        },
-    };
-
     // Current weather data for the barangay (fetched once)
     let _currentWeather = null;
 
@@ -914,56 +881,7 @@
 
 
     // ─────────────────────────────────────────────────────
-    //  18. WEATHER TILE LAYERS
-    // ─────────────────────────────────────────────────────
-
-    function toggleWeatherLayer(key) {
-        const wl = WEATHER_LAYERS[key];
-        if (!wl) return;
-
-        wl.active = !wl.active;
-        const btn = document.querySelector(`.dm-weather-btn[data-weather="${key}"]`);
-        const status = document.getElementById('dmWeatherStatus');
-        if (btn) btn.classList.toggle('active', wl.active);
-
-        if (wl.active) {
-            if (!wl.tile) {
-                wl.tile = L.tileLayer(
-                    `${API}?action=weather_tile&layer=${encodeURIComponent(wl.owmLayer)}&z={z}&x={x}&y={y}`,
-                    { opacity: 0.65, maxZoom: 19, zIndex: 200,
-                      attribution: '© <a href="https://openweathermap.org">OpenWeatherMap</a>' }
-                );
-                wl.tile.once('load', () => {
-                    if (status && wl.active) {
-                        status.textContent = `${wl.label} layer active`;
-                        status.classList.remove('error');
-                    }
-                });
-                wl.tile.once('tileerror', () => {
-                    wl.active = false;
-                    if (btn) btn.classList.remove('active');
-                    if (status) {
-                        status.textContent = `${wl.label} layer unavailable`;
-                        status.classList.add('error');
-                    }
-                    if (_map.hasLayer(wl.tile)) _map.removeLayer(wl.tile);
-                });
-            }
-            if (status) { status.textContent = `Loading ${wl.label.toLowerCase()}…`; status.classList.remove('error'); }
-            wl.tile.addTo(_map);
-        } else {
-            if (wl.tile) _map.removeLayer(wl.tile);
-            if (status) { status.textContent = `${wl.label} layer off`; status.classList.remove('error'); }
-        }
-    }
-
-    // Wire up weather buttons
-    document.querySelectorAll('.dm-weather-btn').forEach(btn => {
-        btn.addEventListener('click', () => toggleWeatherLayer(btn.dataset.weather));
-    });
-
-    // ─────────────────────────────────────────────────────
-    //  19. CURRENT WEATHER WIDGET
+    //  18. CURRENT WEATHER WIDGET
     // ─────────────────────────────────────────────────────
 
     async function loadCurrentWeather() {
