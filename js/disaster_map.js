@@ -67,10 +67,7 @@
     // Active risk filter
     let _riskFilter = 'all';
 
-    // ── Weather tile layers (OWM Maps 1.0) ────────────────
-    // Replace 'YOUR_OWM_API_KEY' with your OpenWeatherMap API key
-    const OWM_KEY = 'YOUR_OWM_API_KEY';
-    const OWM_BASE = 'https://tile.openweathermap.org/map';
+    // Weather requests are proxied by PHP so the API key stays server-side.
 
     const WEATHER_LAYERS = {
         precipitation: {
@@ -926,19 +923,37 @@
 
         wl.active = !wl.active;
         const btn = document.querySelector(`.dm-weather-btn[data-weather="${key}"]`);
+        const status = document.getElementById('dmWeatherStatus');
         if (btn) btn.classList.toggle('active', wl.active);
 
         if (wl.active) {
             if (!wl.tile) {
                 wl.tile = L.tileLayer(
-                    `${OWM_BASE}/${wl.owmLayer}/{z}/{x}/{y}.png?appid=${OWM_KEY}`,
+                    `${API}?action=weather_tile&layer=${encodeURIComponent(wl.owmLayer)}&z={z}&x={x}&y={y}`,
                     { opacity: 0.65, maxZoom: 19, zIndex: 200,
                       attribution: '© <a href="https://openweathermap.org">OpenWeatherMap</a>' }
                 );
+                wl.tile.once('load', () => {
+                    if (status && wl.active) {
+                        status.textContent = `${wl.label} layer active`;
+                        status.classList.remove('error');
+                    }
+                });
+                wl.tile.once('tileerror', () => {
+                    wl.active = false;
+                    if (btn) btn.classList.remove('active');
+                    if (status) {
+                        status.textContent = `${wl.label} layer unavailable`;
+                        status.classList.add('error');
+                    }
+                    if (_map.hasLayer(wl.tile)) _map.removeLayer(wl.tile);
+                });
             }
+            if (status) { status.textContent = `Loading ${wl.label.toLowerCase()}…`; status.classList.remove('error'); }
             wl.tile.addTo(_map);
         } else {
             if (wl.tile) _map.removeLayer(wl.tile);
+            if (status) { status.textContent = `${wl.label} layer off`; status.classList.remove('error'); }
         }
     }
 
@@ -957,15 +972,6 @@
         // Show widget immediately with loading state
         if (widget) widget.hidden = false;
 
-        // No key set — show setup prompt and stop
-        if (!OWM_KEY || OWM_KEY === 'YOUR_OWM_API_KEY') {
-            showWeatherSetup();
-            return;
-        }
-
-        // Barangay Bagong Silang, Caloocan City coordinates
-        const lat = 14.7430, lon = 120.9845;
-
         // AbortSignal.timeout() fallback for older browsers
         let signal;
         try {
@@ -977,19 +983,11 @@
         }
 
         try {
-            const res = await fetch(
-                `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${OWM_KEY}&units=metric`,
-                { signal }
-            );
+            const res = await fetch(`${API}?action=current_weather`, { signal });
 
             const data = await res.json();
-
-            // OWM uses cod:401 for invalid key, cod:200 for success
-            if (data.cod && String(data.cod) !== '200') {
-                throw new Error(data.message || `OWM error ${data.cod}`);
-            }
-
-            _currentWeather = data;
+            if (!res.ok || !data.ok) throw new Error(data.error || `Weather request failed (${res.status})`);
+            _currentWeather = data.weather;
             renderWeatherWidget(_currentWeather);
 
         } catch (err) {
@@ -1004,7 +1002,7 @@
         widget.querySelector('.dm-wx-body').innerHTML = `
             <div class="dm-wx-setup">
                 <i class="fa-solid fa-key"></i>
-                <p>Add your <strong>OpenWeatherMap API key</strong> to <code>disaster_map.js</code> to enable live weather.</p>
+                <p>Add <strong>OPENWEATHER_API_KEY</strong> to the project <code>.env</code> file to enable live weather.</p>
                 <a href="https://openweathermap.org/api" target="_blank" rel="noopener" class="dm-wx-setup-link">
                     Get a free key <i class="fa-solid fa-arrow-up-right-from-square"></i>
                 </a>

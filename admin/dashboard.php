@@ -93,9 +93,9 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin' || $_SE
                 <div class="kpi-card">
                     <div class="kpi-icon-wrap mid"><i class="fa-solid fa-hand-holding-heart"></i></div>
                     <div class="kpi-body">
-                        <span class="kpi-label">Need Welfare</span>
+                        <span class="kpi-label">Urgent Welfare</span>
                         <span class="kpi-number sk-inline" id="kpi-welfare">—</span>
-                        <span class="kpi-sub">Streets requiring assistance</span>
+                        <span class="kpi-sub">Streets with urgent unresolved needs</span>
                     </div>
                 </div>
                 <div class="kpi-card">

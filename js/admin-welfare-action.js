@@ -20,6 +20,7 @@ const state = {
     streets:    [],
     users:      [],
     events:     [],
+    tags:       [],
     kpi:        {},
     page:       1,
     lastPage:   1,
@@ -33,6 +34,7 @@ const state = {
         status:    '',
         priority:  '',
         type:      '',
+        tag:       '',
     },
 };
 
@@ -88,6 +90,7 @@ const ui = {
     filterStatus:  $('filterStatus'),
     filterPriority:$('filterPriority'),
     filterType:    $('filterType'),
+    filterTag:     $('filterTag'),
 
     // Form modal
     formModal:     $('wapFormModal'),
@@ -107,6 +110,7 @@ const ui = {
     formTargetDate:$('formTargetDate'),
     formDesc:      $('formDescription'),
     formRemarks:   $('formRemarks'),
+    formTags:      $('formTags'),
     stepsContainer:$('stepsContainer'),
     btnAddStep:    $('btnAddStep'),
     modalEyebrow:  $('wapModalEyebrow'),
@@ -152,10 +156,12 @@ async function loadMeta() {
         state.streets = json.data.streets || [];
         state.users   = json.data.users   || [];
         state.events  = json.data.events  || [];
+        state.tags    = json.data.tags    || [];
 
         _populateSelect(ui.formStreetId,  state.streets, 'street_id',  s => `${s.street_name} — ${s.barangay}`);
         _populateSelect(ui.formAssignedTo,state.users,   'id',          u => `${u.name} (${u.role})`);
         _populateSelect(ui.formEventId,   state.events,  'event_id',    e => `${e.event_name} (${e.event_date})`);
+        state.tags.forEach(tag => ui.filterTag.insertAdjacentHTML('beforeend', `<option value="${esc(tag.slug)}">${esc(tag.name)}</option>`));
     } catch (err) {
         console.error('loadMeta:', err);
     }
@@ -170,6 +176,7 @@ async function loadPlans() {
         priority: state.filters.priority,
         assistance_type: state.filters.type,
         search: state.filters.search,
+        tag: state.filters.tag,
     });
 
     try {
@@ -294,6 +301,9 @@ function _buildRow(p, num) {
         const m = NEED_META[n] || { label: n, icon: 'fa-tag', cls: '' };
         return `<span class="wap-need-tag ${m.cls}"><i class="fa-solid ${m.icon}" style="font-size:9px"></i>${m.label}</span>`;
     }).join('') + (extra > 0 ? `<span class="wap-more-tag">+${extra}</span>` : '');
+    const tags = Array.isArray(p.tag_details) ? p.tag_details : [];
+    const recordTagsHtml = tags.slice(0, 2).map(tag => `<span class="wap-need-tag" style="--tag-color:${esc(tag.color)};color:var(--tag-color)"><i class="fa-solid fa-tag" style="font-size:9px"></i>${esc(tag.name)}</span>`).join('')
+        + (tags.length > 2 ? `<span class="wap-more-tag">+${tags.length - 2}</span>` : '');
 
     // Priority
     const pm    = PRIORITY_META[p.priority] || PRIORITY_META.Medium;
@@ -329,7 +339,7 @@ function _buildRow(p, num) {
             </div>
         </td>
         <td style="font-size:13px;font-weight:500;color:var(--text-dark)">${esc(p.assistance_type)}</td>
-        <td><div class="wap-needs-wrap">${needsHtml || '<span style="color:var(--slate-mid);font-size:12px">—</span>'}</div></td>
+        <td><div class="wap-needs-wrap">${needsHtml || '<span style="color:var(--slate-mid);font-size:12px">—</span>'}</div><div class="wap-needs-wrap" style="margin-top:4px">${recordTagsHtml}</div></td>
         <td>${pHtml}</td>
         <td>${sHtml}</td>
         <td>${assigned}</td>
@@ -440,6 +450,7 @@ function _fillForm(p) {
     ui.formTargetDate.value     = p.target_date  || '';
     ui.formDesc.value           = p.description  || '';
     ui.formRemarks.value        = p.remarks      || '';
+    ui.formTags.value           = (p.tags || []).join(', ');
     ui.formAssignedTo.value     = p.assigned_to  || '';
 
     // Needs checkboxes
@@ -515,6 +526,7 @@ function _buildPayload() {
         description:      ui.formDesc.value.trim(),
         remarks:          ui.formRemarks.value.trim(),
         assigned_to:      ui.formAssignedTo.value,
+        tags:             ui.formTags.value.split(',').map(tag => tag.trim()).filter(Boolean),
         needs,
         steps,
     };
@@ -543,6 +555,7 @@ async function openViewModal(id) {
     const sm    = STATUS_META[p.status]     || STATUS_META.Planned;
     const needs = Array.isArray(p.needs) ? p.needs : [];
     const steps = Array.isArray(p.steps) ? p.steps : [];
+    const tags = Array.isArray(p.tag_details) ? p.tag_details : [];
 
     const needsHtml = needs.length
         ? needs.map(n => {
@@ -609,6 +622,10 @@ async function openViewModal(id) {
             <div class="wap-needs-wrap" style="margin-top:4px">${needsHtml}</div>
         </div>
         <div class="wap-view-field full">
+            <span class="wap-view-label">Tags / Categories</span>
+            <div class="wap-needs-wrap" style="margin-top:4px">${tags.length ? tags.map(tag => `<span class="wap-need-tag" style="--tag-color:${esc(tag.color)};color:var(--tag-color)"><i class="fa-solid fa-tag" style="font-size:9px"></i>${esc(tag.name)}</span>`).join('') : '—'}</div>
+        </div>
+        <div class="wap-view-field full">
             <span class="wap-view-label">Description</span>
             <span class="wap-view-value">${p.description ? esc(p.description) : '—'}</span>
         </div>
@@ -669,6 +686,10 @@ function bindEvents() {
     });
     ui.filterType.addEventListener('change', () => {
         state.filters.type = ui.filterType.value;
+        state.page = 1; loadPlans();
+    });
+    ui.filterTag.addEventListener('change', () => {
+        state.filters.tag = ui.filterTag.value;
         state.page = 1; loadPlans();
     });
 

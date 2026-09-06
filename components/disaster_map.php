@@ -219,6 +219,7 @@ $page_title = 'Disaster Map — Barangay EQUIAID';
             <button class="dm-weather-btn" data-weather="temp" title="Toggle temperature overlay">
                 <i class="fa-solid fa-temperature-half"></i> Temperature
             </button>
+            <span class="dm-weather-status" id="dmWeatherStatus" role="status" aria-live="polite">Select a layer</span>
             <span class="dm-weather-note">Powered by OpenWeatherMap</span>
         </div>
     </div>
@@ -314,6 +315,31 @@ $page_title = 'Disaster Map — Barangay EQUIAID';
                         </div>
                     </div>
                 </div>
+
+                <section class="dm-wx-widget" id="dmWeatherWidget" aria-label="Current weather">
+                    <div class="dm-wx-header">
+                        <i class="fa-solid fa-cloud-sun dm-wx-header-icon"></i>
+                        Current Weather
+                        <span class="dm-wx-location">Bagong Silang</span>
+                    </div>
+                    <div class="dm-wx-body">
+                        <div class="dm-wx-main">
+                            <img class="dm-wx-icon" id="dmWxIcon" alt="Current weather condition">
+                            <div class="dm-wx-temp-block">
+                                <strong class="dm-wx-temp" id="dmWxTemp">—</strong>
+                                <span class="dm-wx-feels" id="dmWxFeels">Loading…</span>
+                                <span class="dm-wx-desc" id="dmWxDesc">Weather data</span>
+                            </div>
+                        </div>
+                        <div class="dm-wx-alert" id="dmWxAlert" hidden></div>
+                        <div class="dm-wx-grid">
+                            <div class="dm-wx-cell"><i class="fa-solid fa-droplet"></i><span id="dmWxHumidity">—</span><label>Humidity</label></div>
+                            <div class="dm-wx-cell"><i class="fa-solid fa-wind"></i><span id="dmWxWind">—</span><label>Wind</label></div>
+                            <div class="dm-wx-cell"><i class="fa-solid fa-eye"></i><span id="dmWxVisibility">—</span><label>Visibility</label></div>
+                            <div class="dm-wx-cell"><i class="fa-solid fa-cloud-rain"></i><span id="dmWxRain">—</span><label>Rain (1h)</label></div>
+                        </div>
+                    </div>
+                </section>
             </div>
 
             <!-- Detail state (populated by JS on click) -->

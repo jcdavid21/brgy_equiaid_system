@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Apr 22, 2026 at 01:28 AM
+-- Generation Time: Sep 06, 2026 at 07:38 AM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.0.28
 
@@ -42,7 +42,18 @@ CREATE TABLE `activity_logs` (
 
 INSERT INTO `activity_logs` (`id`, `user_id`, `action`, `module`, `ip_address`, `created_at`) VALUES
 (1, 1, 'Updated report #7 (Flood) status to &quot;In Progress&quot;', 'Reports', '::1', '2026-04-08 22:28:32'),
-(2, 1, 'Updated report #7 (Flood) status to &quot;Dismissed&quot;', 'Reports', '::1', '2026-04-08 22:31:45');
+(2, 1, 'Updated report #7 (Flood) status to &quot;Dismissed&quot;', 'Reports', '::1', '2026-04-08 22:31:45'),
+(3, 1, 'Created new welfare action plan &quot;TEST&quot;', 'Welfare', '::1', '2026-05-25 07:16:51'),
+(4, 1, 'Deleted welfare action plan &quot;7&quot;', 'Welfare', '::1', '2026-05-25 07:17:32'),
+(5, 1, 'Created new welfare action plan &quot;TEST&quot;', 'Welfare', '::1', '2026-05-25 07:34:26'),
+(6, 1, 'Updated welfare action plan &quot;TEST&quot;', 'Welfare', '::1', '2026-05-25 07:34:39'),
+(7, 1, 'Updated report #5 (Flood) status to &quot;Resolved&quot;', 'Reports', '::1', '2026-05-25 07:37:12'),
+(8, 1, 'Updated report #1 (Flood) status to &quot;Resolved&quot;', 'Reports', '::1', '2026-05-25 07:37:34'),
+(9, 1, 'Dispatched 2000 unit(s) of &quot;Water Supply&quot; to [ORANGE] Luna St', 'Resources', '::1', '2026-05-25 07:38:50'),
+(10, 1, 'Deleted welfare action plan &quot;8&quot;', 'Welfare', '::1', '2026-09-05 15:53:15'),
+(11, 1, 'Assigned tag \'Disaster Affected\' to street #4', 'Tags', '::1', '2026-09-05 16:12:57'),
+(12, 1, 'Assigned tag \'High Priority\' to resident #6', 'Tags', '::1', '2026-09-05 16:19:57'),
+(13, 1, 'Created street welfare need #1 (Evacuation)', 'Street Welfare Needs', '::1', '2026-09-05 16:34:41');
 
 -- --------------------------------------------------------
 
@@ -404,6 +415,28 @@ INSERT INTO `prediction_results` (`prediction_id`, `street_id`, `model_id`, `fea
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `record_tags`
+--
+
+CREATE TABLE `record_tags` (
+  `object_type` varchar(40) NOT NULL COMMENT 'welfare_action_plan or resident_report',
+  `record_id` int(10) UNSIGNED NOT NULL,
+  `tag_id` int(10) UNSIGNED NOT NULL,
+  `assigned_by` int(10) UNSIGNED DEFAULT NULL,
+  `assigned_at` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `record_tags`
+--
+
+INSERT INTO `record_tags` (`object_type`, `record_id`, `tag_id`, `assigned_by`, `assigned_at`) VALUES
+('resident', 6, 1, 1, '2026-09-05 16:19:57'),
+('street', 4, 10, 1, '2026-09-05 16:12:57');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `report_exports`
 --
 
@@ -447,13 +480,15 @@ CREATE TABLE `resident_reports` (
 --
 
 INSERT INTO `resident_reports` (`report_id`, `user_id`, `street_id`, `event_id`, `report_type`, `severity`, `description`, `image_path`, `latitude`, `longitude`, `status`, `verified_by`, `verified_at`, `resolution_notes`, `created_at`, `updated_at`) VALUES
-(1, 4, 1, 1, 'Flood', 'Severe', 'Water reached floor level. Needs evacuation.', NULL, NULL, NULL, 'Verified', 2, '2024-07-24 21:00:00', NULL, '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
+(1, 4, 1, 1, 'Flood', 'Severe', 'Water reached floor level. Needs evacuation.', NULL, NULL, NULL, 'Resolved', 2, '2024-07-24 21:00:00', NULL, '2026-03-15 23:04:48', '2026-05-25 07:37:34'),
 (2, 6, 6, 1, 'Flood', 'Severe', 'Rizal Ave completely submerged. Cars floating.', NULL, NULL, NULL, 'Verified', 2, '2024-07-24 21:30:00', NULL, '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
 (3, 4, 7, 1, 'Damage', 'Severe', 'Two houses collapsed. Six families need shelter.', NULL, NULL, NULL, 'Verified', 2, '2024-07-24 22:00:00', NULL, '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
 (4, 4, 3, 1, 'Blocked Road', 'Moderate', 'Fallen tree blocking Mabini St.', NULL, NULL, NULL, 'Resolved', 2, '2024-07-25 07:00:00', NULL, '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
-(5, 6, 8, 1, 'Flood', 'Moderate', 'Luna St flood not receded. No clean water.', NULL, NULL, NULL, 'Pending', NULL, NULL, NULL, '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
+(5, 6, 8, 1, 'Flood', 'Moderate', 'Luna St flood not receded. No clean water.', NULL, NULL, NULL, 'Resolved', 1, '2026-05-25 01:37:12', NULL, '2026-03-15 23:04:48', '2026-05-25 07:37:12'),
 (6, 7, 4, NULL, 'Flood', 'Moderate', 'asdadasda', 'uploads/reports/2026/03/rpt_7_1774073660_bcd649bc.jpg', 14.7473750, 121.0468670, 'Pending', NULL, NULL, NULL, '2026-03-21 14:14:20', '2026-03-21 14:14:20'),
-(7, 7, 10, NULL, 'Flood', 'Moderate', 'asdasd', 'uploads/reports/2026/03/rpt_7_1774074809_a01cd90e.jpg', 14.7473550, 121.0468430, 'Dismissed', 1, '2026-04-08 16:28:32', NULL, '2026-03-21 14:33:29', '2026-04-08 22:31:45');
+(7, 7, 10, NULL, 'Flood', 'Moderate', 'asdasd', 'uploads/reports/2026/03/rpt_7_1774074809_a01cd90e.jpg', 14.7473550, 121.0468430, 'Dismissed', 1, '2026-04-08 16:28:32', NULL, '2026-03-21 14:33:29', '2026-04-08 22:31:45'),
+(8, 7, 7, NULL, 'Flood', 'Moderate', NULL, 'uploads/reports/2026/05/rpt_7_1779714754_bc866033.jpg', 14.7097000, 121.0450000, 'Pending', NULL, NULL, NULL, '2026-05-25 21:12:34', '2026-05-25 21:12:34'),
+(9, 7, 10, NULL, 'Flood', 'Moderate', NULL, 'uploads/reports/2026/05/rpt_7_1779714774_c6fd88b8.png', 14.7097000, 121.0450000, 'Pending', NULL, NULL, NULL, '2026-05-25 21:12:54', '2026-05-25 21:12:54');
 
 -- --------------------------------------------------------
 
@@ -484,7 +519,7 @@ CREATE TABLE `resources` (
 INSERT INTO `resources` (`resource_id`, `resource_name`, `category`, `unit`, `unit_cost`, `qty_available`, `qty_reserved`, `qty_distributed`, `restock_threshold`, `supplier`, `notes`, `created_at`, `updated_at`) VALUES
 (1, 'Food Packs', 'Food', 'pack', 350.00, 2000, 0, 630, 50, NULL, NULL, '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
 (2, 'Medicine Kits', 'Medical', 'kit', 820.00, 500, 0, 50, 50, NULL, NULL, '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
-(3, 'Water Supply', 'Water', 'liter', 15.00, 10000, 0, 1800, 50, NULL, NULL, '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
+(3, 'Water Supply', 'Water', 'liter', 15.00, 8000, 0, 3800, 50, NULL, NULL, '2026-03-15 23:04:48', '2026-05-25 07:38:50'),
 (4, 'Shelter Kits', 'Shelter', 'kit', 4500.00, 150, 0, 30, 50, NULL, NULL, '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
 (5, 'Evacuation Van', 'Transport', 'trip', 1200.00, 12, 0, 8, 50, NULL, NULL, '2026-03-15 23:04:48', '2026-03-15 23:04:48');
 
@@ -518,7 +553,8 @@ INSERT INTO `resource_distributions` (`dist_id`, `street_id`, `resource_id`, `ev
 (3, 7, 1, 1, 180, 350.00, 2, '2026-03-15 23:04:48', 118, NULL),
 (4, 1, 4, 1, 30, 4500.00, 2, '2026-03-15 23:04:48', 30, NULL),
 (5, 6, 2, 1, 50, 820.00, 2, '2026-03-15 23:04:48', 50, NULL),
-(6, 8, 3, 1, 1800, 15.00, 2, '2026-03-15 23:04:48', 68, NULL);
+(6, 8, 3, 1, 1800, 15.00, 2, '2026-03-15 23:04:48', 68, NULL),
+(7, 8, 3, NULL, 2000, 15.00, 1, '2026-05-24 23:38:00', 5, NULL);
 
 -- --------------------------------------------------------
 
@@ -613,6 +649,68 @@ INSERT INTO `street_features` (`feature_id`, `street_id`, `snapshot_date`, `pove
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `street_welfare_needs`
+--
+
+CREATE TABLE `street_welfare_needs` (
+  `need_id` int(10) UNSIGNED NOT NULL,
+  `street_id` int(10) UNSIGNED NOT NULL,
+  `category` enum('Food','Medicine','Housing','Livelihood','Sanitation','Evacuation','Financial Assistance') NOT NULL,
+  `affected_households` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `affected_residents` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `priority` enum('Urgent','High','Medium','Low') NOT NULL DEFAULT 'Medium',
+  `description` text NOT NULL,
+  `date_reported` date NOT NULL,
+  `assigned_to` int(10) UNSIGNED DEFAULT NULL,
+  `status` enum('Reported','Under Assessment','Approved','In Progress','Completed','Rejected') NOT NULL DEFAULT 'Reported',
+  `created_by` int(10) UNSIGNED DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ;
+
+--
+-- Dumping data for table `street_welfare_needs`
+--
+
+INSERT INTO `street_welfare_needs` (`need_id`, `street_id`, `category`, `affected_households`, `affected_residents`, `priority`, `description`, `date_reported`, `assigned_to`, `status`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 4, 'Evacuation', 182, 200, 'Medium', 'Need to evacuate', '2026-09-05', 3, 'In Progress', 1, '2026-09-05 16:34:41', '2026-09-05 16:34:41');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tags`
+--
+
+CREATE TABLE `tags` (
+  `tag_id` int(10) UNSIGNED NOT NULL,
+  `name` varchar(80) NOT NULL,
+  `slug` varchar(90) NOT NULL,
+  `color` char(7) NOT NULL DEFAULT '#17684e',
+  `is_predefined` tinyint(1) NOT NULL DEFAULT 0,
+  `created_by` int(10) UNSIGNED DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `tags`
+--
+
+INSERT INTO `tags` (`tag_id`, `name`, `slug`, `color`, `is_predefined`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 'High Priority', 'high-priority', '#17684e', 0, NULL, '2026-09-05 15:51:33', '2026-09-05 15:51:33'),
+(2, 'Medical Assistance', 'medical-assistance', '#17684e', 1, NULL, '2026-09-05 15:51:33', '2026-09-05 16:06:49'),
+(3, 'Food Assistance', 'food-assistance', '#17684e', 1, NULL, '2026-09-05 15:51:33', '2026-09-05 16:06:49'),
+(4, 'PWD', 'pwd', '#17684e', 1, NULL, '2026-09-05 15:51:33', '2026-09-05 16:06:49'),
+(5, 'Senior Citizen', 'senior-citizen', '#17684e', 1, NULL, '2026-09-05 15:51:33', '2026-09-05 16:06:49'),
+(6, 'Evacuation Needed', 'evacuation-needed', '#17684e', 0, NULL, '2026-09-05 15:51:33', '2026-09-05 15:51:33'),
+(7, 'Solo Parent', 'solo-parent', '#db2777', 1, NULL, '2026-09-05 16:06:49', '2026-09-05 16:06:49'),
+(8, 'Low Income', 'low-income', '#b45309', 1, NULL, '2026-09-05 16:06:49', '2026-09-05 16:06:49'),
+(9, 'High Risk', 'high-risk', '#ea580c', 1, NULL, '2026-09-05 16:06:49', '2026-09-05 16:06:49'),
+(10, 'Disaster Affected', 'disaster-affected', '#475569', 1, NULL, '2026-09-05 16:06:49', '2026-09-05 16:06:49');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `typhoon_events`
 --
 
@@ -637,7 +735,8 @@ CREATE TABLE `typhoon_events` (
 
 INSERT INTO `typhoon_events` (`event_id`, `event_name`, `local_name`, `category`, `landfall_date`, `date_started`, `date_ended`, `wind_speed_kph`, `status`, `notes`, `created_by`, `created_at`) VALUES
 (1, 'Typhoon Egay', 'Egay', 3, NULL, '2024-07-23', '2024-07-25', 185.00, 'Passed', NULL, 1, '2026-03-15 23:04:48'),
-(2, 'Typhoon Falcon', 'Falcon', 2, NULL, '2024-08-10', NULL, 140.00, 'Active', NULL, 1, '2026-03-15 23:04:48');
+(2, 'Typhoon Falcon', 'Falcon', 2, NULL, '2024-08-10', NULL, 140.00, 'Active', NULL, 1, '2026-03-15 23:04:48'),
+(3, 'Typhoon Badong', 'Badong', 3, '2026-05-24', '2026-05-23', NULL, 185.00, 'Monitoring', NULL, NULL, '2026-05-25 08:51:19');
 
 -- --------------------------------------------------------
 
@@ -670,7 +769,8 @@ INSERT INTO `typhoon_street_impacts` (`impact_id`, `event_id`, `street_id`, `flo
 (2, 1, 6, 'Severely Flooded', 'Moderate Damage', 2.10, 0, 140, 628, 'AI', NULL, 2, '2024-07-24 18:30:00'),
 (3, 1, 7, 'Flooded', 'Severely Damaged', 1.95, 0, 118, 540, 'Staff', NULL, 2, '2024-07-24 19:00:00'),
 (4, 1, 2, 'Flooded', 'Minor Damage', 0.90, 1, 52, 238, 'Staff', NULL, 2, '2024-07-24 19:30:00'),
-(5, 1, 8, 'Flooded', 'Moderate Damage', 0.75, 1, 68, 312, 'Resident', NULL, 2, '2024-07-24 20:00:00');
+(5, 1, 8, 'Flooded', 'Moderate Damage', 0.75, 1, 68, 312, 'Resident', NULL, 2, '2024-07-24 20:00:00'),
+(6, 3, 1, 'Severely Flooded', 'Severely Damaged', 2.50, 1, 225, 300, 'Staff', NULL, NULL, '2026-05-25 09:01:27');
 
 -- --------------------------------------------------------
 
@@ -711,7 +811,9 @@ INSERT INTO `uploaded_images` (`image_id`, `street_id`, `event_id`, `uploaded_by
 (4, 2, 1, 2, 'narra_partial_01.jpg', 'st2_evt1_20240724_001.jpg', 'uploads/streets/2024/07/st2_evt1_20240724_001.jpg', NULL, 'image/jpeg', NULL, NULL, '2024-07-24 10:30:00', NULL, NULL, NULL, 1, 1, NULL, '2026-03-15 23:04:48'),
 (5, 4, NULL, 2, 'acacia_normal_01.jpg', 'st4_20240724_001.jpg', 'uploads/streets/2024/07/st4_20240724_001.jpg', NULL, 'image/jpeg', NULL, NULL, '2024-07-24 11:00:00', NULL, NULL, NULL, 1, 1, NULL, '2026-03-15 23:04:48'),
 (6, 4, NULL, 7, 'flood_6.jpg', 'rpt_7_1774073660_bcd649bc.jpg', 'uploads/reports/2026/03/rpt_7_1774073660_bcd649bc.jpg', NULL, 'image/jpeg', NULL, NULL, NULL, 14.7473750, 121.0468670, NULL, 0, 1, NULL, '2026-03-21 14:14:20'),
-(7, 10, NULL, 7, 'flood_6.jpg', 'rpt_7_1774074809_a01cd90e.jpg', 'uploads/reports/2026/03/rpt_7_1774074809_a01cd90e.jpg', NULL, 'image/jpeg', NULL, NULL, NULL, 14.7473550, 121.0468430, NULL, 0, 1, NULL, '2026-03-21 14:33:29');
+(7, 10, NULL, 7, 'flood_6.jpg', 'rpt_7_1774074809_a01cd90e.jpg', 'uploads/reports/2026/03/rpt_7_1774074809_a01cd90e.jpg', NULL, 'image/jpeg', NULL, NULL, NULL, 14.7473550, 121.0468430, NULL, 0, 1, NULL, '2026-03-21 14:33:29'),
+(8, 7, NULL, 7, 'flood_6.jpg', 'rpt_7_1779714754_bc866033.jpg', 'uploads/reports/2026/05/rpt_7_1779714754_bc866033.jpg', NULL, 'image/jpeg', NULL, NULL, NULL, 14.7097000, 121.0450000, NULL, 0, 1, NULL, '2026-05-25 21:12:34'),
+(9, 10, NULL, 7, 'Smart-finance-flow-chart1.png', 'rpt_7_1779714774_c6fd88b8.png', 'uploads/reports/2026/05/rpt_7_1779714774_c6fd88b8.png', NULL, 'image/png', NULL, NULL, NULL, 14.7097000, 121.0450000, NULL, 0, 1, NULL, '2026-05-25 21:12:54');
 
 -- --------------------------------------------------------
 
@@ -737,13 +839,13 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `phone_number`, `is_active`, `last_login_at`, `created_at`, `updated_at`) VALUES
-(1, 'Maria Santos', 'admin@equiaid.gov.ph', '$2y$10$WXqKgebQWKzwJvLiXyeMq.mbcsnqr5ERLf2wemg/6/Qj1pbpPpPd6', 'admin', '09171234567', 1, '2026-04-09 15:35:37', '2026-03-15 23:04:48', '2026-04-09 15:35:37'),
-(2, 'Juan dela Cruz', 'staff1@equiaid.gov.ph', '$2y$10$WXqKgebQWKzwJvLiXyeMq.mbcsnqr5ERLf2wemg/6/Qj1pbpPpPd6', 'staff', '09181234567', 1, NULL, '2026-03-15 23:04:48', '2026-03-18 19:42:39'),
+(1, 'Maria Santos', 'admin@equiaid.gov.ph', '$2y$10$WXqKgebQWKzwJvLiXyeMq.mbcsnqr5ERLf2wemg/6/Qj1pbpPpPd6', 'admin', '09171234567', 1, '2026-09-05 15:18:24', '2026-03-15 23:04:48', '2026-09-05 15:18:24'),
+(2, 'Juan dela Cruz', 'staff1@equiaid.gov.ph', '$2y$10$WXqKgebQWKzwJvLiXyeMq.mbcsnqr5ERLf2wemg/6/Qj1pbpPpPd6', 'staff', '09181234567', 1, '2026-09-06 13:33:10', '2026-03-15 23:04:48', '2026-09-06 13:33:10'),
 (3, 'Rosa Reyes', 'dswd@equiaid.gov.ph', '$2y$10$WXqKgebQWKzwJvLiXyeMq.mbcsnqr5ERLf2wemg/6/Qj1pbpPpPd6', 'dswd_officer', '09191234567', 1, NULL, '2026-03-15 23:04:48', '2026-03-18 19:42:39'),
 (4, 'Pedro Gonzales', 'resident1@gmail.com', '$2y$10$WXqKgebQWKzwJvLiXyeMq.mbcsnqr5ERLf2wemg/6/Qj1pbpPpPd6', 'resident', '09201234567', 1, NULL, '2026-03-15 23:04:48', '2026-03-18 19:42:39'),
 (5, 'Elena Villanueva', 'labeler1@equiaid.gov.ph', '$2y$10$WXqKgebQWKzwJvLiXyeMq.mbcsnqr5ERLf2wemg/6/Qj1pbpPpPd6', 'labeler', '09211234567', 1, NULL, '2026-03-15 23:04:48', '2026-03-18 19:42:39'),
 (6, 'Carlos Bautista', 'resident2@gmail.com', '$2y$10$WXqKgebQWKzwJvLiXyeMq.mbcsnqr5ERLf2wemg/6/Qj1pbpPpPd6', 'resident', '09221234567', 1, NULL, '2026-03-15 23:04:48', '2026-03-18 19:42:39'),
-(7, 'Juan Carlo David', 'juancarlodavid14@gmail.com', '$2y$10$WXqKgebQWKzwJvLiXyeMq.mbcsnqr5ERLf2wemg/6/Qj1pbpPpPd6', 'resident', '+639565535401', 1, '2026-04-09 18:36:57', '2026-03-16 20:03:00', '2026-04-09 19:24:09');
+(7, 'Juan Carlo David', 'juancarlodavid14@gmail.com', '$2y$10$WXqKgebQWKzwJvLiXyeMq.mbcsnqr5ERLf2wemg/6/Qj1pbpPpPd6', 'resident', '+639565535401', 1, '2026-05-28 16:32:16', '2026-03-16 20:03:00', '2026-05-28 16:32:16');
 
 -- --------------------------------------------------------
 
@@ -782,13 +884,12 @@ CREATE TABLE `welfare_action_plans` (
 -- Dumping data for table `welfare_action_plans`
 --
 
-INSERT INTO `welfare_action_plans` (`plan_id`, `street_id`, `event_id`, `assistance_type`, `description`, `status`, `vuln_score_before`, `vuln_score_after`, `risk_level_before`, `risk_level_after`, `planned_date`, `started_at`, `completed_at`, `assigned_to`, `created_by`, `created_at`, `updated_at`) VALUES
-(1, 1, 1, 'Food Distribution', '200 food packs for 98 households along Sampaguita St.', 'Completed', 87.00, NULL, 'RED', NULL, '2024-07-25', '2024-07-25 14:00:00', '2024-07-25 18:00:00', 2, 1, '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
-(2, 6, 1, 'Food Distribution', '250 food packs for 140 households along Rizal Ave.', 'Completed', 91.00, NULL, 'RED', NULL, '2024-07-25', '2024-07-25 15:00:00', '2024-07-25 19:00:00', 2, 1, '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
-(3, 7, 1, 'Medical Assistance', 'Medical team deployed to Bonifacio St for injuries/trauma.', 'Completed', 85.00, NULL, 'RED', NULL, '2024-07-26', '2024-07-26 08:00:00', '2024-07-26 17:00:00', 2, 1, '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
-(4, 8, 1, 'Water Supply', 'Clean water distribution — 1,800 liters to Luna St.', 'Completed', 62.00, NULL, 'ORANGE', NULL, '2024-07-26', '2024-07-26 09:00:00', '2024-07-26 14:00:00', 2, 1, '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
-(5, 1, 1, 'Shelter Repair', '__EXT__:{\"priority\":\"Medium\",\"needs\":[],\"steps\":[],\"beneficiary_type\":\"street\",\"beneficiary_name\":\"\",\"target_date\":\"\",\"remarks\":\"\"}||Repair of 30 damaged houses along Sampaguita St.', 'Ongoing', 87.00, NULL, 'RED', NULL, '2024-07-27', '2024-07-27 07:00:00', NULL, 2, 1, '2026-03-15 23:04:48', '2026-04-07 20:48:20'),
-(6, 2, 1, 'Food Distribution', 'Follow-up distribution for 52 affected HH in Narra St.', 'Ongoing', 72.00, NULL, 'ORANGE', NULL, '2024-07-27', '2024-07-27 10:00:00', NULL, 2, 1, '2026-03-15 23:04:48', '2026-03-15 23:04:48');
+INSERT INTO `welfare_action_plans` (`plan_id`, `street_id`, `event_id`, `assistance_type`, `description`, `status`, `vuln_score_before`, `vuln_score_after`, `priority`, `needs_json`, `steps_json`, `beneficiary_type`, `beneficiary_name`, `target_date`, `remarks`, `risk_level_before`, `risk_level_after`, `planned_date`, `started_at`, `completed_at`, `assigned_to`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 1, 1, 'Food Distribution', '200 food packs for 98 households along Sampaguita St.', 'Completed', 87.00, NULL, 'Medium', NULL, NULL, 'street', NULL, NULL, NULL, 'RED', NULL, '2024-07-25', '2024-07-25 14:00:00', '2024-07-25 18:00:00', 2, 1, '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
+(2, 6, 1, 'Food Distribution', '250 food packs for 140 households along Rizal Ave.', 'Completed', 91.00, NULL, 'Medium', NULL, NULL, 'street', NULL, NULL, NULL, 'RED', NULL, '2024-07-25', '2024-07-25 15:00:00', '2024-07-25 19:00:00', 2, 1, '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
+(3, 7, 1, 'Medical Assistance', 'Medical team deployed to Bonifacio St for injuries/trauma.', 'Completed', 85.00, NULL, 'Medium', NULL, NULL, 'street', NULL, NULL, NULL, 'RED', NULL, '2024-07-26', '2024-07-26 08:00:00', '2024-07-26 17:00:00', 2, 1, '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
+(4, 8, 1, 'Water Supply', 'Clean water distribution — 1,800 liters to Luna St.', 'Completed', 62.00, NULL, 'Medium', NULL, NULL, 'street', NULL, NULL, NULL, 'ORANGE', NULL, '2024-07-26', '2024-07-26 09:00:00', '2024-07-26 14:00:00', 2, 1, '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
+(6, 2, 1, 'Food Distribution', 'Follow-up distribution for 52 affected HH in Narra St.', 'Ongoing', 72.00, NULL, 'Medium', NULL, NULL, 'street', NULL, NULL, NULL, 'ORANGE', NULL, '2024-07-27', '2024-07-27 10:00:00', NULL, 2, 1, '2026-03-15 23:04:48', '2026-03-15 23:04:48');
 
 -- --------------------------------------------------------
 
@@ -925,6 +1026,15 @@ ALTER TABLE `prediction_results`
   ADD KEY `fk_pr_user` (`triggered_by`);
 
 --
+-- Indexes for table `record_tags`
+--
+ALTER TABLE `record_tags`
+  ADD PRIMARY KEY (`object_type`,`record_id`,`tag_id`),
+  ADD KEY `idx_record_tags_tag` (`tag_id`,`object_type`,`record_id`),
+  ADD KEY `fk_record_tags_assigned_by` (`assigned_by`),
+  ADD KEY `idx_record_tags_record` (`object_type`,`record_id`);
+
+--
 -- Indexes for table `report_exports`
 --
 ALTER TABLE `report_exports`
@@ -981,6 +1091,25 @@ ALTER TABLE `street_features`
   ADD UNIQUE KEY `uq_sf_street_date` (`street_id`,`snapshot_date`),
   ADD KEY `idx_sf_date` (`snapshot_date`),
   ADD KEY `idx_sf_image` (`latest_image_id`);
+
+--
+-- Indexes for table `street_welfare_needs`
+--
+ALTER TABLE `street_welfare_needs`
+  ADD PRIMARY KEY (`need_id`),
+  ADD KEY `idx_swn_filters` (`street_id`,`category`,`priority`,`status`,`date_reported`),
+  ADD KEY `idx_swn_status_priority` (`status`,`priority`),
+  ADD KEY `idx_swn_assigned` (`assigned_to`),
+  ADD KEY `fk_swn_created` (`created_by`);
+
+--
+-- Indexes for table `tags`
+--
+ALTER TABLE `tags`
+  ADD PRIMARY KEY (`tag_id`),
+  ADD UNIQUE KEY `uq_tags_slug` (`slug`),
+  ADD KEY `idx_tags_name` (`name`),
+  ADD KEY `fk_tags_created_by` (`created_by`);
 
 --
 -- Indexes for table `typhoon_events`
@@ -1049,7 +1178,7 @@ ALTER TABLE `zones`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `analytics_snapshots`
@@ -1115,7 +1244,7 @@ ALTER TABLE `report_exports`
 -- AUTO_INCREMENT for table `resident_reports`
 --
 ALTER TABLE `resident_reports`
-  MODIFY `report_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `report_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `resources`
@@ -1127,7 +1256,7 @@ ALTER TABLE `resources`
 -- AUTO_INCREMENT for table `resource_distributions`
 --
 ALTER TABLE `resource_distributions`
-  MODIFY `dist_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `dist_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `streets`
@@ -1142,22 +1271,34 @@ ALTER TABLE `street_features`
   MODIFY `feature_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
+-- AUTO_INCREMENT for table `street_welfare_needs`
+--
+ALTER TABLE `street_welfare_needs`
+  MODIFY `need_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `tags`
+--
+ALTER TABLE `tags`
+  MODIFY `tag_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+
+--
 -- AUTO_INCREMENT for table `typhoon_events`
 --
 ALTER TABLE `typhoon_events`
-  MODIFY `event_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `event_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `typhoon_street_impacts`
 --
 ALTER TABLE `typhoon_street_impacts`
-  MODIFY `impact_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `impact_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `uploaded_images`
 --
 ALTER TABLE `uploaded_images`
-  MODIFY `image_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `image_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `users`
@@ -1169,7 +1310,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `welfare_action_plans`
 --
 ALTER TABLE `welfare_action_plans`
-  MODIFY `plan_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `plan_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `zones`
@@ -1255,6 +1396,13 @@ ALTER TABLE `prediction_results`
   ADD CONSTRAINT `fk_pr_user` FOREIGN KEY (`triggered_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
+-- Constraints for table `record_tags`
+--
+ALTER TABLE `record_tags`
+  ADD CONSTRAINT `fk_record_tags_assigned_by` FOREIGN KEY (`assigned_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_record_tags_tag` FOREIGN KEY (`tag_id`) REFERENCES `tags` (`tag_id`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `report_exports`
 --
 ALTER TABLE `report_exports`
@@ -1290,6 +1438,20 @@ ALTER TABLE `streets`
 ALTER TABLE `street_features`
   ADD CONSTRAINT `fk_sf_image` FOREIGN KEY (`latest_image_id`) REFERENCES `uploaded_images` (`image_id`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_sf_street` FOREIGN KEY (`street_id`) REFERENCES `streets` (`street_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `street_welfare_needs`
+--
+ALTER TABLE `street_welfare_needs`
+  ADD CONSTRAINT `fk_swn_assigned` FOREIGN KEY (`assigned_to`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_swn_created` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_swn_street` FOREIGN KEY (`street_id`) REFERENCES `streets` (`street_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `tags`
+--
+ALTER TABLE `tags`
+  ADD CONSTRAINT `fk_tags_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
 
 --
 -- Constraints for table `typhoon_events`

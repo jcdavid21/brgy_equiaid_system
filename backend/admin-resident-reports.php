@@ -14,6 +14,7 @@ header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
 
 require_once __DIR__ . '/db.php'; // provides $pdo
+require_once __DIR__ . '/tags.php';
 
 // ── Helper: send JSON response ──────────────────────────────
 function respond(bool $ok, $data = null, string $msg = '', int $code = 200): void {
@@ -103,7 +104,8 @@ try {
              FROM typhoon_events ORDER BY date_started DESC LIMIT 20"
         )->fetchAll(PDO::FETCH_ASSOC);
 
-        respond(true, compact('streets', 'users', 'events'));
+        $tags = $pdo->query('SELECT tag_id, name, slug, color FROM tags ORDER BY name')->fetchAll(PDO::FETCH_ASSOC);
+        respond(true, compact('streets', 'users', 'events', 'tags'));
     }
 
     // ── GET: single report ────────────────────────────
@@ -125,6 +127,9 @@ try {
         $report = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$report) respond(false, null, 'Report not found.', 404);
+
+        $report['tags'] = tag_list($pdo, 'resident_report', (int)$report['report_id']);
+        $report['tag_details'] = tag_report_details($pdo, (int)$report['report_id']);
 
         respond(true, $report);
     }
@@ -210,8 +215,12 @@ try {
         }
         if (!empty($_GET['search'])) {
             $like     = '%' . $_GET['search'] . '%';
-            $where[]  = '(s.street_name LIKE ? OR u.name LIKE ? OR r.description LIKE ? OR r.report_type LIKE ?)';
-            $params   = array_merge($params, [$like, $like, $like, $like]);
+            $where[]  = '(s.street_name LIKE ? OR u.name LIKE ? OR r.description LIKE ? OR r.report_type LIKE ? OR EXISTS (SELECT 1 FROM record_tags rt JOIN tags t ON t.tag_id = rt.tag_id WHERE ((rt.object_type = \'resident_report\' AND rt.record_id = r.report_id) OR (rt.object_type = \'street\' AND rt.record_id = r.street_id)) AND t.name LIKE ?))';
+            $params   = array_merge($params, [$like, $like, $like, $like, $like]);
+        }
+        if (!empty($_GET['tag'])) {
+            $where[] = "EXISTS (SELECT 1 FROM record_tags rt JOIN tags t ON t.tag_id = rt.tag_id WHERE ((rt.object_type = 'resident_report' AND rt.record_id = r.report_id) OR (rt.object_type = 'street' AND rt.record_id = r.street_id)) AND t.slug = ?)";
+            $params[] = $_GET['tag'];
         }
 
         $whereStr = implode(' AND ', $where);
@@ -258,6 +267,11 @@ try {
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
         $reports = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($reports as &$report) {
+            $report['tags'] = tag_list($pdo, 'resident_report', (int)$report['report_id']);
+            $report['tag_details'] = tag_report_details($pdo, (int)$report['report_id']);
+        }
+        unset($report);
 
         respond(true, [
             'reports'   => $reports,
@@ -316,11 +330,18 @@ try {
             $stmt->execute([$newStatus, $resolutionNotes ?: null, $verifiedBy, $verifiedAt, $id]);
         }
 
+        if (array_key_exists('tags', $input)) {
+            if (!is_array($input['tags'])) respond(false, null, 'Tags must be an array.', 422);
+            try { tag_sync($pdo, 'resident_report', $id, $input['tags'], $_SESSION['user_id'] ?? null); }
+            catch (InvalidArgumentException $e) { respond(false, null, $e->getMessage(), 422); }
+        }
+
         respond(true, ['report_id' => $id], 'Report status updated successfully.');
     }
 
     // ── DELETE ────────────────────────────────────────
     if ($method === 'DELETE' && $id > 0) {
+        $pdo->prepare("DELETE FROM record_tags WHERE object_type = 'resident_report' AND record_id = ?")->execute([$id]);
         $stmt = $pdo->prepare("DELETE FROM resident_reports WHERE report_id = ?");
         $stmt->execute([$id]);
 

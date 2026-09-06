@@ -9,9 +9,11 @@ $nav_items = [
     ['id' => 'prediction-analytics',         'label' => 'Prediction & Analytics',  'icon' => 'fa-solid fa-chart-line',           'href' => 'prediction_analytics.php'],
     ['id' => 'resource-allocation','label' => 'Resource Allocation',     'icon' => 'fa-solid fa-boxes-stacked',        'href' => 'resource-allocation.php'],
     ['id' => 'welfare-action',     'label' => 'Welfare Action Plan',     'icon' => 'fa-solid fa-file-shield',          'href' => 'welfare-action.php'],
+    ['id' => 'street-welfare-needs','label' => 'Street Welfare Needs',   'icon' => 'fa-solid fa-hand-holding-heart',   'href' => 'street-welfare-needs.php'],
     ['id' => 'typhoon-impact',     'label' => 'Typhoon Impact',          'icon' => 'fa-solid fa-wind',                 'href' => 'typhoon-impact.php'],
     ['id' => 'resident-reports',   'label' => 'Resident Reports',        'icon' => 'fa-solid fa-flag',                 'href' => 'resident-reports.php'],
     ['id' => 'activity-logs',      'label' => 'Activity Logs',           'icon' => 'fa-solid fa-clipboard-list',       'href' => 'activity-logs.php'],
+    ['id' => 'tags',               'label' => 'Data Tags',               'icon' => 'fa-solid fa-tags',                 'href' => 'tags.php'],
     ['id' => 'user-management',    'label' => 'User Management',         'icon' => 'fa-solid fa-users-gear',           'href' => 'user-management.php'],
 ];
 ?>

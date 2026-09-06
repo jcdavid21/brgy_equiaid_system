@@ -144,6 +144,9 @@ if (!isset($_SESSION['user_role']) || !in_array($_SESSION['user_role'], ['admin'
                         <option value="Psychosocial Support">Psychosocial Support</option>
                         <option value="Other">Other</option>
                     </select>
+                    <select class="wap-filter-select" id="filterTag">
+                        <option value="">All Tags</option>
+                    </select>
                     <div class="wap-toolbar-spacer"></div>
                     <span id="wapRecordCount" class="table-info"></span>
                 </div>
@@ -294,6 +297,13 @@ if (!isset($_SESSION['user_role']) || !in_array($_SESSION['user_role'], ['admin'
                         <label class="wap-form-label" for="formDescription">Description</label>
                         <textarea class="wap-form-control" id="formDescription" name="description"
                                   placeholder="Describe the welfare plan and its objectives…"></textarea>
+                    </div>
+
+                    <div class="wap-form-field full">
+                        <label class="wap-form-label" for="formTags">Tags / Categories</label>
+                        <input type="text" class="wap-form-control" id="formTags" name="tags"
+                               placeholder="e.g. High Priority, PWD, Medical Assistance">
+                        <small class="wap-form-help">Separate tags with commas. Updating this field replaces the plan's current tags.</small>
                     </div>
 
                     <!-- Action Steps -->

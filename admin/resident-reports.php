@@ -187,6 +187,9 @@ if (!isset($_SESSION['user_role']) || !in_array($_SESSION['user_role'], ['admin'
                         <option value="">All Streets</option>
                         <!-- Populated by JS -->
                     </select>
+                    <select class="rr-filter-select" id="filterTag">
+                        <option value="">All Tags</option>
+                    </select>
                     <div class="rr-toolbar-spacer"></div>
                     <span id="rrRecordCount" class="table-info"></span>
                 </div>
@@ -340,6 +343,13 @@ if (!isset($_SESSION['user_role']) || !in_array($_SESSION['user_role'], ['admin'
                                   placeholder="Describe actions taken, findings, or reasons for dismissal…"
                                   rows="4"></textarea>
                         <span class="rr-form-hint">Previous notes will be preserved if left blank.</span>
+                    </div>
+
+                    <div class="rr-form-field full">
+                        <label class="rr-form-label" for="updateTags">Tags / Case Categories</label>
+                        <input type="text" class="rr-form-control" id="updateTags"
+                               placeholder="e.g. Evacuation Needed, High Priority, PWD">
+                        <span class="rr-form-hint">Separate tags with commas. Saving replaces the report's current tags.</span>
                     </div>
                 </div>
             </form>

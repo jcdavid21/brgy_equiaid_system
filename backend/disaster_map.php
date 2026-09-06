@@ -24,6 +24,7 @@ if (empty($_SESSION['user_id'])) {
 }
 
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/env.php';
 
 if (!$pdo) {
     http_response_code(503);
@@ -33,8 +34,50 @@ if (!$pdo) {
 
 $action = trim($_GET['action'] ?? '');
 
+function openWeatherFetch(string $url): array {
+    $context = stream_context_create(['http' => ['timeout' => 10, 'ignore_errors' => true, 'user_agent' => 'Barangay-EQUIAID/1.0']]);
+    $body = @file_get_contents($url, false, $context);
+    $status = 0;
+    foreach ($http_response_header ?? [] as $header) {
+        if (preg_match('/^HTTP\/\S+\s+(\d{3})/', $header, $match)) $status = (int)$match[1];
+    }
+    return [$status, $body];
+}
+
 try {
     switch ($action) {
+
+        case 'current_weather':
+            $key = env_value('OPENWEATHER_API_KEY', env_value('OWM_KEY', ''));
+            if ($key === '') {
+                http_response_code(503);
+                echo json_encode(['ok' => false, 'error' => 'OPENWEATHER_API_KEY is missing from the project .env file.']);
+                break;
+            }
+            [$status, $body] = openWeatherFetch('https://api.openweathermap.org/data/2.5/weather?lat=14.7430&lon=120.9845&units=metric&appid=' . rawurlencode($key));
+            $weather = json_decode((string)$body, true);
+            if ($status !== 200 || !is_array($weather)) {
+                http_response_code($status === 401 ? 401 : ($status === 429 ? 429 : 502));
+                echo json_encode(['ok' => false, 'error' => $weather['message'] ?? 'OpenWeatherMap could not be reached.']);
+                break;
+            }
+            echo json_encode(['ok' => true, 'weather' => $weather], JSON_UNESCAPED_SLASHES);
+            break;
+
+        case 'weather_tile':
+            $key = env_value('OPENWEATHER_API_KEY', env_value('OWM_KEY', ''));
+            $layers = ['precipitation_new','wind_new','clouds_new','temp_new'];
+            $layer = (string)($_GET['layer'] ?? '');
+            $z = filter_input(INPUT_GET, 'z', FILTER_VALIDATE_INT);
+            $x = filter_input(INPUT_GET, 'x', FILTER_VALIDATE_INT);
+            $y = filter_input(INPUT_GET, 'y', FILTER_VALIDATE_INT);
+            if ($key === '' || !in_array($layer, $layers, true) || $z === false || $x === false || $y === false || $z < 0 || $z > 19 || $x < 0 || $y < 0) {
+                http_response_code(422); echo json_encode(['ok' => false, 'error' => 'Invalid weather tile request.']); break;
+            }
+            [$status, $tile] = openWeatherFetch("https://tile.openweathermap.org/map/{$layer}/{$z}/{$x}/{$y}.png?appid=" . rawurlencode($key));
+            if ($status !== 200 || $tile === false) { http_response_code($status === 401 ? 401 : 502); echo json_encode(['ok' => false, 'error' => 'Weather tile unavailable.']); break; }
+            header('Content-Type: image/png'); header('Cache-Control: public, max-age=600'); echo $tile;
+            break;
 
         // ── SUMMARY KPIs ─────────────────────────────────────
         case 'summary':

@@ -14,6 +14,7 @@ const state = {
     reports:      [],
     streets:      [],
     users:        [],
+    tags:         [],
     kpi:          {},
     page:         1,
     lastPage:     1,
@@ -27,6 +28,7 @@ const state = {
         severity:    '',
         report_type: '',
         street_id:   '',
+        tag:         '',
     },
 };
 
@@ -76,6 +78,7 @@ const ui = {
     filterSeverity: $id('filterSeverity'),
     filterType:     $id('filterType'),
     filterStreet:   $id('filterStreet'),
+    filterTag:      $id('filterTag'),
 
     // View modal
     viewModal:       $id('rrViewModal'),
@@ -91,6 +94,7 @@ const ui = {
     updateStatusBtns:    $id('updateStatusBtns'),
     updateStatus:        $id('updateStatus'),
     updateResolutionNotes:$id('updateResolutionNotes'),
+    updateTags:          $id('updateTags'),
     btnSubmitUpdate:     $id('btnSubmitUpdate'),
     btnUpdateLabel:      $id('btnUpdateLabel'),
 
@@ -376,6 +380,7 @@ async function loadMeta() {
 
         state.streets = json.data.streets || [];
         state.users   = json.data.users   || [];
+        state.tags    = json.data.tags    || [];
 
         // Populate street filter dropdown
         state.streets.forEach(s => {
@@ -383,6 +388,12 @@ async function loadMeta() {
             opt.value       = s.street_id;
             opt.textContent = `${s.street_name} — ${s.barangay}`;
             ui.filterStreet.appendChild(opt);
+        });
+        state.tags.forEach(tag => {
+            const opt = document.createElement('option');
+            opt.value = tag.slug;
+            opt.textContent = tag.name;
+            ui.filterTag.appendChild(opt);
         });
     } catch (err) {
         console.error('loadMeta:', err);
@@ -399,6 +410,7 @@ async function loadReports() {
         report_type: state.filters.report_type,
         street_id:   state.filters.street_id,
         search:      state.filters.search,
+        tag:         state.filters.tag,
     });
 
     try {
@@ -498,6 +510,7 @@ function _renderTable(reports) {
         const imageBadge = r.image_path
             ? `<span class="rr-has-image"><i class="fa-solid fa-image"></i> Photo</span>`
             : '';
+        const tagsHtml = (r.tag_details || []).map(tag => `<span class="rr-record-tag" title="${tag.source === 'street' ? 'Inherited from street' : 'Assigned to report'}" style="--tag-color:${esc(tag.color)}"><i class="fa-solid ${tag.source === 'street' ? 'fa-road' : 'fa-tag'}"></i>${esc(tag.name)}</span>`).join('');
 
         const verifiedBy = r.verifier_name
             ? `<div style="font-size:12px;color:var(--text-mid)">${esc(r.verifier_name)}</div>
@@ -526,6 +539,7 @@ function _renderTable(reports) {
                         ${imageBadge}
                     </div>
                     <div class="rr-street-name">${esc(r.street_name ?? '—')}, ${esc(r.barangay ?? '')}</div>
+                    ${tagsHtml ? `<div class="rr-record-tags">${tagsHtml}</div>` : ''}
                     ${descPreview}
                 </div>
             </td>
@@ -661,6 +675,7 @@ window.openViewModal = async function(id) {
         const verifiedHtml = r.verifier_name
             ? `${esc(r.verifier_name)} <span style="color:var(--slate-mid);font-size:11px">on ${_fmtDateTime(r.verified_at)}</span>`
             : '—';
+        const tagsHtml = (r.tag_details || []).map(tag => `<span class="rr-record-tag" title="${tag.source === 'street' ? 'Inherited from street' : 'Assigned to report'}" style="--tag-color:${esc(tag.color)}"><i class="fa-solid ${tag.source === 'street' ? 'fa-road' : 'fa-tag'}"></i>${esc(tag.name)}</span>`).join('') || '—';
 
         ui.viewModalBody.innerHTML = `
             <div class="rr-view-header-row">
@@ -710,6 +725,10 @@ window.openViewModal = async function(id) {
                     <div class="rr-view-value">${verifiedHtml}</div>
                 </div>
                 <div class="rr-view-field full">
+                    <div class="rr-view-label">Tags / Case Categories</div>
+                    <div class="rr-record-tags">${tagsHtml}</div>
+                </div>
+                <div class="rr-view-field full">
                     <div class="rr-view-label">Description</div>
                     <div class="rr-view-value">${esc(r.description ?? '—')}</div>
                 </div>
@@ -749,6 +768,7 @@ window.openUpdateModal = async function(id) {
 
     // Pre-fill resolution notes (clear so they can type fresh)
     ui.updateResolutionNotes.value = '';
+    ui.updateTags.value = (report.tags || []).join(', ');
 
     // Report info strip
     const typeMeta = TYPE_META[report.report_type] ?? TYPE_META['Other'];
@@ -855,6 +875,13 @@ function bindEvents() {
         state.filters.street_id = ui.filterStreet.value;
         state.page = 1; loadReports();
     });
+    ui.filterTag.addEventListener('change', () => {
+        state.filters.tag = ui.filterTag.value;
+        state.page = 1; loadReports();
+    });
+    ui.updateTags.addEventListener('input', () => {
+        ui.btnSubmitUpdate.disabled = false;
+    });
 
     // ── Export ───────────────────────────────────────────
     $id('btnExportCsv').addEventListener('click', exportCsv);
@@ -884,6 +911,7 @@ function bindEvents() {
         const payload = {
             status: newStatus,
             resolution_notes: ui.updateResolutionNotes.value.trim() || null,
+            tags: ui.updateTags.value.split(',').map(tag => tag.trim()).filter(Boolean),
         };
 
         ui.btnSubmitUpdate.disabled  = true;

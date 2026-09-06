@@ -64,6 +64,11 @@ try {
                    AND needs_welfare = 'Yes'"
             )->fetchColumn();
 
+            $urgent_welfare = (int) $pdo->query(
+                "SELECT COUNT(DISTINCT street_id) FROM street_welfare_needs
+                 WHERE priority = 'Urgent' AND status NOT IN ('Completed','Rejected')"
+            )->fetchColumn();
+
             // Available resource types (distinct categories with qty_available > 0)
             $resources = (int) $pdo->query(
                 "SELECT COUNT(*) FROM resources
@@ -88,6 +93,7 @@ try {
                     'total_streets'    => $total,
                     'affected_streets' => $affected,
                     'need_welfare'     => $need_welfare,
+                    'urgent_welfare'   => $urgent_welfare,
                     'resources'        => $resources,
                     'active_reports'   => $reports,
                     'evac_centers'     => $evac_centers,

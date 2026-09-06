@@ -210,7 +210,7 @@
     var map  = {
       'kpi-total-streets': d.total_streets,
       'kpi-affected':      d.affected_streets,
-      'kpi-welfare':       d.need_welfare,
+      'kpi-welfare':       d.urgent_welfare,
       'kpi-resources':     d.resources,
       'kpi-reports':       d.active_reports,
       'kpi-evac':          d.evac_centers,

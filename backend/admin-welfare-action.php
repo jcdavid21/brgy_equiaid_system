@@ -12,6 +12,7 @@ header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
 
 require_once __DIR__ . '/db.php'; // provides $pdo
+require_once __DIR__ . '/tags.php';
 
 _ensure_welfare_action_plan_columns($pdo);
 
@@ -66,7 +67,8 @@ try {
                 FROM typhoon_events ORDER BY date_started DESC LIMIT 20"
         )->fetchAll(PDO::FETCH_ASSOC);
 
-        respond(true, compact('streets', 'users', 'events'));
+        $tags = $pdo->query("SELECT tag_id, name, slug, color FROM tags ORDER BY name")->fetchAll(PDO::FETCH_ASSOC);
+        respond(true, compact('streets', 'users', 'events', 'tags'));
     }
 
     // ── GET: single plan ─────────────────────────────
@@ -100,6 +102,8 @@ try {
 
         // Decode extended JSON fields stored in description
         $plan = _decode_extended_fields($plan);
+        $plan['tags'] = tag_list($pdo, 'welfare_action_plan', (int)$plan['plan_id']);
+        $plan['tag_details'] = tag_details($pdo, 'welfare_action_plan', (int)$plan['plan_id']);
 
         respond(true, $plan);
     }
@@ -135,8 +139,12 @@ try {
         }
         if (!empty($_GET['search'])) {
             $like    = '%' . $_GET['search'] . '%';
-            $where[] = '(s.street_name LIKE ? OR w.assistance_type LIKE ? OR u.name LIKE ?)';
-            $params  = array_merge($params, [$like, $like, $like]);
+            $where[] = '(s.street_name LIKE ? OR w.assistance_type LIKE ? OR u.name LIKE ? OR EXISTS (SELECT 1 FROM record_tags rt JOIN tags t ON t.tag_id = rt.tag_id WHERE rt.object_type = \'welfare_action_plan\' AND rt.record_id = w.plan_id AND t.name LIKE ?))';
+            $params  = array_merge($params, [$like, $like, $like, $like]);
+        }
+        if (!empty($_GET['tag'])) {
+            $where[] = 'EXISTS (SELECT 1 FROM record_tags rt JOIN tags t ON t.tag_id = rt.tag_id WHERE rt.object_type = \'welfare_action_plan\' AND rt.record_id = w.plan_id AND t.slug = ?)';
+            $params[] = $_GET['tag'];
         }
 
         $whereStr = implode(' AND ', $where);
@@ -182,6 +190,11 @@ try {
 
         // Decode extended JSON for each plan
         $plans = array_map('_decode_extended_fields', $plans);
+        foreach ($plans as &$plan) {
+            $plan['tags'] = tag_list($pdo, 'welfare_action_plan', (int)$plan['plan_id']);
+            $plan['tag_details'] = tag_details($pdo, 'welfare_action_plan', (int)$plan['plan_id']);
+        }
+        unset($plan);
 
         respond(true, [
             'plans'      => $plans,
@@ -195,6 +208,8 @@ try {
 
     // ── POST: create plan ────────────────────────────
     if ($method === 'POST') {
+        if (isset($input['tags']) && !is_array($input['tags'])) respond(false, null, 'Tags must be an array.', 422);
+        try { tag_normalize($input['tags'] ?? []); } catch (InvalidArgumentException $e) { respond(false, null, $e->getMessage(), 422); }
         $required = ['street_id', 'assistance_type', 'planned_date'];
         foreach ($required as $f) {
             if (empty($input[$f])) {
@@ -241,6 +256,8 @@ try {
         ]);
 
         $newId = (int)$pdo->lastInsertId();
+        try { tag_sync($pdo, 'welfare_action_plan', $newId, $input['tags'] ?? [], $_SESSION['user_id'] ?? null); }
+        catch (InvalidArgumentException $e) { respond(false, null, $e->getMessage(), 422); }
 
         // Auto-set started_at if Ongoing
         if (($input['status'] ?? 'Planned') === 'Ongoing') {
@@ -253,6 +270,8 @@ try {
 
     // ── PUT: update plan ─────────────────────────────
     if ($method === 'PUT' && $id > 0) {
+        if (isset($input['tags']) && !is_array($input['tags'])) respond(false, null, 'Tags must be an array.', 422);
+        try { tag_normalize($input['tags'] ?? []); } catch (InvalidArgumentException $e) { respond(false, null, $e->getMessage(), 422); }
         // Verify exists
         $exists = $pdo->prepare("SELECT plan_id FROM welfare_action_plans WHERE plan_id = ?");
         $exists->execute([$id]);
@@ -331,12 +350,15 @@ try {
             clean($input['remarks'] ?? ''),
             $id,
         ]);
+        try { tag_sync($pdo, 'welfare_action_plan', $id, $input['tags'] ?? [], $_SESSION['user_id'] ?? null); }
+        catch (InvalidArgumentException $e) { respond(false, null, $e->getMessage(), 422); }
 
         respond(true, ['plan_id' => $id], 'Action plan updated successfully.');
     }
 
     // ── DELETE ───────────────────────────────────────
     if ($method === 'DELETE' && $id > 0) {
+        $pdo->prepare("DELETE FROM record_tags WHERE object_type = 'welfare_action_plan' AND record_id = ?")->execute([$id]);
         $stmt = $pdo->prepare("DELETE FROM welfare_action_plans WHERE plan_id = ?");
         $stmt->execute([$id]);
 
