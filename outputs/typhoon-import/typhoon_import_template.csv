@@ -1,0 +1,1 @@
+schema_version,dataset_type,event_key,local_name,international_name,classification,report_year,report_revision,report_published_at,started_at_utc,ended_at_utc,peak_wind_kph,minimum_pressure_hpa,street_id,street_name,zone_id,barangay,city,observed_at,flood_status,flood_height_m,damage_status,road_accessible,affected_households,affected_persons,source_agency,source_url,notes

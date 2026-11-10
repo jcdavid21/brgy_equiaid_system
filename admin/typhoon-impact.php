@@ -9,12 +9,14 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
     header("Location: ../index.php");
     exit();
 }
+if (empty($_SESSION['typhoon_csrf'])) $_SESSION['typhoon_csrf'] = bin2hex(random_bytes(32));
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="typhoon-csrf" content="<?= htmlspecialchars($_SESSION['typhoon_csrf'], ENT_QUOTES) ?>">
     <title><?= htmlspecialchars($page_title) ?></title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -53,17 +55,18 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
                 </div>
                 <div class="dash-header-right">
                     <div class="ti-admin-actions" style="display:flex;gap:8px;align-items:center;margin-right:12px;">
-                        <button class="btn-dash-outline" id="btnAddEvent" title="Add new typhoon event">
-                            <i class="fa-solid fa-hurricane"></i> Add Typhoon
+                        <button class="btn-dash-outline" id="btnAddEvent" title="Import an official PAGASA report">
+                            <i class="fa-solid fa-file-arrow-up"></i> Import PAGASA Data
                         </button>
-                        
-                        <button class="btn-dash-outline" id="btnAddImpact" title="Log street impact">
-                            <i class="fa-solid fa-plus"></i> Log Impact
+
+                        <button class="btn-dash-outline" id="btnDemoImpactImport" title="Import street impact assessments from CSV">
+                            <i class="fa-solid fa-file-csv"></i> Import Impact CSV
                         </button>
-                        
-                        <button class="btn-dash-outline" id="btnManageStatus" title="Set event active/inactive">
-                            <i class="fa-solid fa-toggle-on"></i> Set Status
+
+                        <button class="btn-dash-outline" id="btnPagasaHistory" title="View immutable PAGASA source revisions">
+                            <i class="fa-solid fa-clock-rotate-left"></i> Revisions
                         </button>
+
                     </div>
                     <div class="ti-event-selector-wrap">
                         <label class="ti-event-label" for="tiEventSelect">
@@ -91,6 +94,7 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
                 </div>
                 <div class="ti-banner-stats" id="tiBannerStats"></div>
             </div>
+            <div id="tiImpactDataNotice" class="ti-import-notice" style="display:none;margin-bottom:16px;" role="status"></div>
 
             <!-- ── KPI STRIP ───────────────────────────── -->
             <div class="overview-grid ti-kpi-grid" id="tiKpiGrid">
@@ -335,13 +339,13 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
     </main>
 </div><!-- /.admin-shell -->
 
-<!-- ══ ADD TYPHOON EVENT MODAL ══════════════════════════ -->
+<!-- ══ IMPORT PAGASA REPORT MODAL ════════════════════════ -->
 <div class="modal-backdrop" id="tiAddEventModal" role="dialog" aria-modal="true">
-    <div class="modal-box" style="max-width:540px;">
+    <div class="modal-box" style="max-width:720px;">
         <div class="modal-header">
             <div class="modal-title-group">
-                <span class="modal-eyebrow">Typhoon Events</span>
-                <h3 class="modal-title">Add New Typhoon Event</h3>
+                <span class="modal-eyebrow" id="tiImportEyebrow">Official source import</span>
+                <h3 class="modal-title" id="tiImportTitle">Import PAGASA Data</h3>
             </div>
             <button class="modal-close" id="tiAddEventModalClose" aria-label="Close">
                 <i class="fa-solid fa-xmark"></i>
@@ -349,181 +353,78 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
         </div>
         <div class="modal-body" style="padding:24px;">
             <div id="tiAddEventMsg" style="display:none;margin-bottom:12px;padding:10px 14px;border-radius:6px;font-size:13px;"></div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-                <div style="grid-column:1/-1;">
-                    <label class="ti-form-label">Event Name *</label>
-                    <input type="text" id="aeEventName" class="ti-form-input" placeholder="e.g. Typhoon Egay" maxlength="120">
+            <div class="ti-import-notice">
+                <i class="fa-solid fa-shield-halved"></i>
+                <div id="tiImportNotice"><strong>Read-only source data</strong><br>CSV records must match the reviewed PAGASA dataset. Importing weather details does not create street-impact assessments.</div>
+            </div>
+            <div style="margin-top:16px;">
+                <label class="ti-form-label" for="pagasaImportFormat">Import format</label>
+                <select id="pagasaImportFormat" class="ti-form-input">
+                    <option value="csv">CSV — bulk typhoon records</option>
+                    <option value="pdf">PDF — one reviewed PAGASA report</option>
+                    <option value="impact">Street Impact CSV — street assessments</option>
+                </select>
+            </div>
+            <div id="pagasaCsvFields" style="margin-top:16px;">
+                <label class="ti-form-label" id="tiCsvFileLabel" for="pagasaCsvFile">PAGASA dataset (CSV) *</label>
+                <input type="file" id="pagasaCsvFile" class="ti-form-input" accept=".csv,text/csv">
+                <small class="ti-form-help" id="tiCsvHelp">Maximum 2 MB. Upload the full dataset or a subset with the same columns and unchanged values.</small>
+                <a class="ti-sample-download" id="tiCsvDownload" href="../backend/admin-typhoon-impact.php?action=download_pagasa_csv_sample"><i class="fa-solid fa-download"></i> Download sample CSV format</a>
+                <small class="ti-form-help" id="tiCsvDownloadHelp">Column headers and one example record only, for reference.</small>
+            </div>
+            <div id="pagasaPdfFields" style="display:none;margin-top:16px;">
+                <label class="ti-form-label" for="pagasaPdfFile">Official PAGASA Preliminary Report (PDF) *</label>
+                <input type="file" id="pagasaPdfFile" class="ti-form-input" accept="application/pdf,.pdf">
+                <small class="ti-form-help">Maximum 15 MB. Use an original PDF referenced by the provided CSV dataset. The uploaded file must match its reviewed source hash.</small>
+            </div>
+            <div id="pagasaSourceFields" style="display:none;margin-top:14px;">
+                <label class="ti-form-label" for="pagasaSourceUrl">PAGASA source URL</label>
+                <input type="url" id="pagasaSourceUrl" class="ti-form-input" placeholder="https://pubfiles.pagasa.dost.gov.ph/...pdf">
+                <small class="ti-form-help">Only official pagasa.dost.gov.ph links are accepted.</small>
+            </div>
+            <div id="pagasaImportProgress" class="ti-import-progress" style="display:none;">
+                <i class="fa-solid fa-circle-notch fa-spin"></i> Validating source data…
+            </div>
+            <div id="pagasaCsvPreview" class="ti-csv-preview" style="display:none;" aria-live="polite"></div>
+            <div id="pagasaImportPreview" class="ti-import-preview" style="display:none;">
+                <div class="ti-import-preview-head">
+                    <div>
+                        <span class="modal-eyebrow">Extracted preview</span>
+                        <h4 id="pagasaPreviewTitle">—</h4>
+                    </div>
+                    <span class="ti-source-badge"><i class="fa-solid fa-lock"></i> Read only</span>
                 </div>
-                <div>
-                    <label class="ti-form-label">Local Name</label>
-                    <input type="text" id="aeLocalName" class="ti-form-input" placeholder="e.g. Egay" maxlength="120">
-                </div>
-                <div>
-                    <label class="ti-form-label">Category (1–5)</label>
-                    <select id="aeCategory" class="ti-form-input">
-                        <option value="">— None —</option>
-                        <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="ti-form-label">Date Started *</label>
-                    <input type="date" id="aeDateStarted" class="ti-form-input">
-                </div>
-                <div>
-                    <label class="ti-form-label">Date Ended</label>
-                    <input type="date" id="aeDateEnded" class="ti-form-input">
-                </div>
-                <div>
-                    <label class="ti-form-label">Landfall Date</label>
-                    <input type="date" id="aeLandfallDate" class="ti-form-input">
-                </div>
-                <div>
-                    <label class="ti-form-label">Wind Speed (kph)</label>
-                    <input type="number" id="aeWindSpeed" class="ti-form-input" placeholder="e.g. 185" min="0" max="400" step="0.01">
-                </div>
-                <div>
-                    <label class="ti-form-label">Status *</label>
-                    <select id="aeStatus" class="ti-form-input">
-                        <option value="Monitoring">Monitoring</option>
-                        <option value="Active">Active</option>
-                        <option value="Passed">Passed</option>
-                    </select>
-                </div>
-                <div style="grid-column:1/-1;">
-                    <label class="ti-form-label">Notes</label>
-                    <textarea id="aeNotes" class="ti-form-input" rows="3" placeholder="Optional notes…" style="resize:vertical;"></textarea>
-                </div>
+                <div class="ti-import-preview-grid" id="pagasaPreviewGrid"></div>
             </div>
             <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;">
                 <button class="btn-dash-outline" id="tiAddEventCancel">Cancel</button>
-                <button class="btn-dash-primary" id="tiAddEventSubmit">
-                    <i class="fa-solid fa-floppy-disk"></i> Save Event
+                <button class="btn-dash-primary" id="tiAnalyzePagasaReport">
+                    <i class="fa-solid fa-magnifying-glass"></i> Preview CSV
+                </button>
+                <button class="btn-dash-primary" id="tiAddEventSubmit" style="display:none;">
+                    <i class="fa-solid fa-file-import"></i> Confirm Import
                 </button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- ══ SET EVENT STATUS MODAL ════════════════════════════ -->
-<div class="modal-backdrop" id="tiManageStatusModal" role="dialog" aria-modal="true">
-    <div class="modal-box" style="max-width:420px;">
+<!-- ══ PAGASA REVISION HISTORY MODAL ════════════════════ -->
+<div class="modal-backdrop" id="tiPagasaHistoryModal" role="dialog" aria-modal="true">
+    <div class="modal-box" style="max-width:760px;">
         <div class="modal-header">
             <div class="modal-title-group">
-                <span class="modal-eyebrow">Manage Events</span>
-                <h3 class="modal-title">Set Typhoon Status</h3>
+                <span class="modal-eyebrow">Immutable audit trail</span>
+                <h3 class="modal-title">PAGASA Report Revisions</h3>
             </div>
-            <button class="modal-close" id="tiManageStatusModalClose" aria-label="Close">
+            <button class="modal-close" id="tiPagasaHistoryClose" aria-label="Close">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
-        <div class="modal-body" style="padding:24px;">
-            <div id="tiManageStatusMsg" style="display:none;margin-bottom:12px;padding:10px 14px;border-radius:6px;font-size:13px;"></div>
-            <div style="margin-bottom:14px;">
-                <label class="ti-form-label">Select Event *</label>
-                <select id="msEventSelect" class="ti-form-input">
-                    <option value="">— Choose event —</option>
-                </select>
-            </div>
-            <div>
-                <label class="ti-form-label">New Status *</label>
-                <select id="msStatus" class="ti-form-input">
-                    <option value="Active">Active</option>
-                    <option value="Monitoring">Monitoring</option>
-                    <option value="Passed">Passed</option>
-                </select>
-            </div>
-            <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;">
-                <button class="btn-dash-outline" id="tiManageStatusCancel">Cancel</button>
-                <button class="btn-dash-primary" id="tiManageStatusSubmit">
-                    <i class="fa-solid fa-check"></i> Update Status
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ══ LOG STREET IMPACT MODAL ═══════════════════════════ -->
-<div class="modal-backdrop" id="tiAddImpactModal" role="dialog" aria-modal="true">
-    <div class="modal-box" style="max-width:580px;">
-        <div class="modal-header">
-            <div class="modal-title-group">
-                <span class="modal-eyebrow">Street-Level Data</span>
-                <h3 class="modal-title">Log Typhoon Street Impact</h3>
-            </div>
-            <button class="modal-close" id="tiAddImpactModalClose" aria-label="Close">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-        </div>
-        <div class="modal-body" style="padding:24px;">
-            <div id="tiAddImpactMsg" style="display:none;margin-bottom:12px;padding:10px 14px;border-radius:6px;font-size:13px;"></div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-                <div style="grid-column:1/-1;">
-                    <label class="ti-form-label">Typhoon Event *</label>
-                    <select id="aiEventSelect" class="ti-form-input">
-                        <option value="">— Select event —</option>
-                    </select>
-                </div>
-                <div style="grid-column:1/-1;">
-                    <label class="ti-form-label">Street *</label>
-                    <select id="aiStreetSelect" class="ti-form-input">
-                        <option value="">— Select street —</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="ti-form-label">Flood Status *</label>
-                    <select id="aiFloodStatus" class="ti-form-input">
-                        <option value="None">None</option>
-                        <option value="Flooded">Flooded</option>
-                        <option value="Severely Flooded">Severely Flooded</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="ti-form-label">Damage Status *</label>
-                    <select id="aiDamageStatus" class="ti-form-input">
-                        <option value="None">None</option>
-                        <option value="Minor Damage">Minor Damage</option>
-                        <option value="Moderate Damage">Moderate Damage</option>
-                        <option value="Severely Damaged">Severely Damaged</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="ti-form-label">Flood Height (m)</label>
-                    <input type="number" id="aiFloodHeight" class="ti-form-input" placeholder="e.g. 1.5" min="0" max="20" step="0.01">
-                </div>
-                <div>
-                    <label class="ti-form-label">Road Accessible?</label>
-                    <select id="aiRoadAccessible" class="ti-form-input">
-                        <option value="1">Yes</option>
-                        <option value="0">No</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="ti-form-label">Affected Households</label>
-                    <input type="number" id="aiAffectedHH" class="ti-form-input" placeholder="0" min="0">
-                </div>
-                <div>
-                    <label class="ti-form-label">Affected Persons</label>
-                    <input type="number" id="aiAffectedPersons" class="ti-form-input" placeholder="0" min="0">
-                </div>
-                <div>
-                    <label class="ti-form-label">Report Source *</label>
-                    <select id="aiReportSource" class="ti-form-input">
-                        <option value="Staff">Staff</option>
-                        <option value="AI">AI</option>
-                        <option value="Resident">Resident</option>
-                        <option value="PAGASA">PAGASA</option>
-                    </select>
-                </div>
-                <div style="grid-column:1/-1;">
-                    <label class="ti-form-label">Notes</label>
-                    <textarea id="aiNotes" class="ti-form-input" rows="3" placeholder="Optional notes…" style="resize:vertical;"></textarea>
-                </div>
-            </div>
-            <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;">
-                <button class="btn-dash-outline" id="tiAddImpactCancel">Cancel</button>
-                <button class="btn-dash-primary" id="tiAddImpactSubmit">
-                    <i class="fa-solid fa-floppy-disk"></i> Save Impact Record
-                </button>
+        <div class="modal-body" style="padding:24px;max-height:70vh;overflow:auto;">
+            <div id="tiPagasaHistoryBody" class="ti-revision-list">Select an imported typhoon event.</div>
+            <div style="display:flex;justify-content:flex-end;margin-top:20px;">
+                <button class="btn-dash-outline" id="tiPagasaHistoryDone">Close</button>
             </div>
         </div>
     </div>
@@ -546,6 +447,8 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="../js/admin-typhoon-impact.js"></script>
 </body>
 </html>

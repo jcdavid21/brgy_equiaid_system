@@ -1472,3 +1472,103 @@ body.ti-modal-locked {
 .ti-form-input:focus { border-color:var(--accent,#3b82f6); }
 .btn-dash-primary { display:inline-flex; align-items:center; gap:7px; padding:8px 18px; background:var(--accent,#3b82f6); color:#fff; border:none; border-radius:7px; font-size:13px; font-weight:600; cursor:pointer; }
 .btn-dash-primary:hover { opacity:.9; }
+.ti-import-notice {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 13px 14px;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    background: #eff6ff;
+    color: #1e3a5f;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.ti-import-notice > i { color: #2563eb; margin-top: 3px; }
+.ti-form-help { display: block; margin-top: 6px; color: #64748b; font-size: 11px; }
+
+.ti-import-progress {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #475569;
+    font-size: 13px;
+}
+
+.ti-import-preview {
+    margin-top: 18px;
+    padding: 16px;
+    border: 1px solid #dbe4ee;
+    border-radius: 10px;
+    background: #f8fafc;
+}
+
+.ti-import-preview-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.ti-import-preview-head h4 { margin: 3px 0 0; color: #0f172a; font-size: 17px; }
+.ti-source-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: #dcfce7;
+    color: #166534;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.ti-import-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.ti-import-field { min-width: 0; }
+.ti-import-field span { display: block; color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: .04em; }
+.ti-import-field strong { display: block; margin-top: 3px; color: #1e293b; font-size: 12px; overflow-wrap: anywhere; }
+
+.ti-revision-list { display: grid; gap: 10px; }
+.ti-revision-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 13px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+}
+.ti-revision-item.is-latest { border-color: #86efac; background: #f0fdf4; }
+.ti-revision-name { color: #0f172a; font-size: 13px; font-weight: 600; }
+.ti-revision-meta { margin-top: 3px; color: #64748b; font-size: 11px; }
+.ti-revision-actions { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.ti-revision-actions a { color: #2563eb; font-size: 12px; font-weight: 600; text-decoration: none; }
+
+@media (max-width: 680px) {
+    .ti-import-preview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/* Bulk source import preview */
+.ti-demo-notice { background:#fff7ed; border-color:#fdba74; color:#9a3412; }
+.ti-sample-download { display:block; margin-top:12px; color:#1d4ed8; font-size:12px; font-weight:600; }
+.ti-csv-preview { margin-top:18px; font-size:12px; }
+.ti-csv-preview p { margin:8px 0; }
+.ti-csv-preview-scroll { overflow:auto; max-height:300px; border:1px solid #e2e8f0; border-radius:8px; }
+.ti-csv-preview table { width:100%; border-collapse:collapse; min-width:560px; }
+.ti-csv-preview th { position:sticky; top:0; background:#f1f5f9; text-align:left; }
+.ti-csv-preview th, .ti-csv-preview td { padding:9px; border-bottom:1px solid #e2e8f0; vertical-align:top; }
+.ti-csv-quality { color:#92400e; max-width:220px; }
+.ti-admin-actions { flex-wrap:wrap; }
+#tiAddEventModal .modal-box { max-height:90vh; display:flex; flex-direction:column; }
+#tiAddEventModal .modal-body { overflow-y:auto; min-height:0; }

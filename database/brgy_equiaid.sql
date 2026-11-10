@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Sep 06, 2026 at 07:38 AM
+-- Generation Time: Nov 10, 2026 at 04:19 PM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.0.28
 
@@ -98,7 +98,7 @@ CREATE TABLE `analytics_snapshots` (
 --
 
 INSERT INTO `analytics_snapshots` (`snap_id`, `snapshot_date`, `snapshot_type`, `event_id`, `total_streets`, `streets_red`, `streets_orange`, `streets_yellow`, `streets_green`, `streets_needs_welfare`, `streets_moderate_welfare`, `streets_no_welfare`, `pct_affected`, `pct_needs_welfare`, `pct_improved`, `total_affected_persons`, `total_affected_households`, `total_budget_recommended`, `total_budget_approved`, `total_budget_spent`, `total_food_packs_dist`, `total_medicine_dist`, `total_shelter_kits_dist`, `images_uploaded_count`, `images_analyzed_count`, `labels_collected_count`, `active_model_id`, `avg_model_confidence`, `created_at`) VALUES
-(1, '2024-07-24', 'Event', 1, 10, 3, 2, 1, 4, 5, 1, 4, 50.00, 60.00, NULL, 2170, 476, 555000.00, 540000.00, 210000.00, 0, 0, 0, 5, 5, 5, 2, 0.8826, '2026-03-15 23:04:48'),
+(1, '2024-07-24', 'Event', NULL, 10, 3, 2, 1, 4, 5, 1, 4, 50.00, 60.00, NULL, 2170, 476, 555000.00, 540000.00, 210000.00, 0, 0, 0, 5, 5, 5, 2, 0.8826, '2026-03-15 23:04:48'),
 (2, '2026-04-08', 'Daily', NULL, 10, 3, 2, 0, 5, 4, 1, 5, 50.00, 40.00, NULL, 0, 0, 0.00, 0.00, 0.00, 0, 0, 0, 0, 0, 0, NULL, NULL, '2026-04-08 22:38:20');
 
 -- --------------------------------------------------------
@@ -126,10 +126,10 @@ CREATE TABLE `announcements` (
 --
 
 INSERT INTO `announcements` (`announcement_id`, `event_id`, `category`, `priority`, `title`, `body`, `is_pinned`, `is_active`, `author_id`, `created_at`, `updated_at`) VALUES
-(1, 2, 'Alert', 'Critical', 'BAGYO FALCON: Evacuation Order for Zone 3', 'Lahat ng residente sa Zone 3 (Rizal Ave, Bonifacio St, Luna St) ay inuutusan na mag-evacuate papunta sa pinakamalapit na evacuation center. Ang baha ay umabot na sa 1.5 metro. Magdala ng mahahalagang gamit at dokumento. Huwag mag-atubiling lumapit sa barangay hall para sa tulong.', 1, 1, 1, '2026-03-21 19:35:26', '2026-03-21 19:35:26'),
-(2, 2, 'Weather', 'High', 'Signal No. 2 Raised — Typhoon Falcon Update', 'Ayon sa PAGASA, ang Typhoon Falcon ay naglalayag patungo sa Luzon at inaasahang makakarating sa ating lugar sa loob ng 24 na oras. Lahat ng residente ay pinapaalalahanan na mag-ingat, mag-stock ng pagkain at tubig, at manatili sa loob ng bahay hanggang sa susunod na abiso.', 0, 1, 1, '2026-03-21 19:35:26', '2026-03-21 19:35:26'),
-(3, 2, 'Relief', 'High', 'Relief Operations — Food Packs Distribution Today', 'Ang pamamahagi ng food packs ay magsisimula ngayong araw sa Bagong Silang Elementary School (Zone 1) mula 8:00 AM hanggang 5:00 PM. Magdala ng valid ID at barangay clearance. Priority ang buntis, may sakit, at matatanda.', 0, 1, 2, '2026-03-21 19:35:26', '2026-03-21 19:35:26'),
-(4, 2, 'Evacuation', 'High', 'All Evacuation Centers Now Open', 'Ang lahat ng evacuation centers ay bukas na at handang tumanggap ng mga evacuees. Bagong Silang Elementary School (Zone 1) — 500 capacity. Bagong Silang Covered Court (Zone 3) — 800 capacity. Zone 2 Multi-Purpose Hall — 350 capacity. Libre ang pagkain at tirahan para sa lahat ng evacuees.', 0, 1, 1, '2026-03-21 19:35:26', '2026-03-21 19:35:26'),
+(1, NULL, 'Alert', 'Critical', 'BAGYO FALCON: Evacuation Order for Zone 3', 'Lahat ng residente sa Zone 3 (Rizal Ave, Bonifacio St, Luna St) ay inuutusan na mag-evacuate papunta sa pinakamalapit na evacuation center. Ang baha ay umabot na sa 1.5 metro. Magdala ng mahahalagang gamit at dokumento. Huwag mag-atubiling lumapit sa barangay hall para sa tulong.', 1, 1, 1, '2026-03-21 19:35:26', '2026-03-21 19:35:26'),
+(2, NULL, 'Weather', 'High', 'Signal No. 2 Raised — Typhoon Falcon Update', 'Ayon sa PAGASA, ang Typhoon Falcon ay naglalayag patungo sa Luzon at inaasahang makakarating sa ating lugar sa loob ng 24 na oras. Lahat ng residente ay pinapaalalahanan na mag-ingat, mag-stock ng pagkain at tubig, at manatili sa loob ng bahay hanggang sa susunod na abiso.', 0, 1, 1, '2026-03-21 19:35:26', '2026-03-21 19:35:26'),
+(3, NULL, 'Relief', 'High', 'Relief Operations — Food Packs Distribution Today', 'Ang pamamahagi ng food packs ay magsisimula ngayong araw sa Bagong Silang Elementary School (Zone 1) mula 8:00 AM hanggang 5:00 PM. Magdala ng valid ID at barangay clearance. Priority ang buntis, may sakit, at matatanda.', 0, 1, 2, '2026-03-21 19:35:26', '2026-03-21 19:35:26'),
+(4, NULL, 'Evacuation', 'High', 'All Evacuation Centers Now Open', 'Ang lahat ng evacuation centers ay bukas na at handang tumanggap ng mga evacuees. Bagong Silang Elementary School (Zone 1) — 500 capacity. Bagong Silang Covered Court (Zone 3) — 800 capacity. Zone 2 Multi-Purpose Hall — 350 capacity. Libre ang pagkain at tirahan para sa lahat ng evacuees.', 0, 1, 1, '2026-03-21 19:35:26', '2026-03-21 19:35:26'),
 (5, NULL, 'General', 'Normal', 'Barangay Hall Extended Hours During Typhoon Season', 'Ang barangay hall ay magbubukas mula 6:00 AM hanggang 10:00 PM sa panahon ng bagyo para sa mga emergency na pangangailangan ng mga residente. Para sa agarang tulong, makipag-ugnayan sa EQUIAID hotline o personal na pumunta sa barangay hall.', 0, 1, 1, '2026-03-21 19:35:26', '2026-03-21 19:35:26'),
 (6, NULL, 'General', 'Normal', 'EQUIAID System Update — Flood Reporting Now Available', 'Ang bagong flood reporting feature ay available na sa inyong mobile browser. Maaari na kayong mag-submit ng flood reports na may larawan at GPS location direkta mula sa inyong telepono. Bisitahin ang report.php para masubukan. Ang lahat ng reports ay direkta na napupunta sa barangay staff para sa agarang aksyon.', 0, 1, 1, '2026-03-21 19:35:26', '2026-03-21 19:35:26');
 
@@ -163,11 +163,11 @@ CREATE TABLE `budget_allocations` (
 --
 
 INSERT INTO `budget_allocations` (`alloc_id`, `street_id`, `event_id`, `risk_level`, `vuln_score`, `recommended_budget`, `approved_budget`, `actual_spent`, `affected_households`, `priority_score`, `allocation_basis`, `approved_by`, `approved_at`, `fiscal_period`, `created_at`, `updated_at`) VALUES
-(1, 1, 1, 'RED', 87.00, 120000.00, 120000.00, 0.00, 98, 92.00, 'Score 87 RED; 98 affected HH; ₱1,224/HH', 1, '2024-07-25 08:00:00', '2024-Q3', '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
-(2, 6, 1, 'RED', 91.00, 135000.00, 130000.00, 0.00, 140, 94.50, 'Score 91 RED; 140 affected HH; ₱929/HH', 1, '2024-07-25 08:00:00', '2024-Q3', '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
-(3, 7, 1, 'RED', 85.00, 115000.00, 115000.00, 0.00, 118, 89.00, 'Score 85 RED; 118 affected HH', 1, '2024-07-25 08:00:00', '2024-Q3', '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
-(4, 2, 1, 'ORANGE', 72.00, 80000.00, 75000.00, 0.00, 52, 74.20, 'Score 72 ORANGE; 52 affected HH', 1, '2024-07-25 09:00:00', '2024-Q3', '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
-(5, 8, 1, 'ORANGE', 62.00, 65000.00, 60000.00, 0.00, 68, 65.00, 'Score 62 ORANGE; 68 affected HH', 1, '2024-07-25 09:00:00', '2024-Q3', '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
+(1, 1, NULL, 'RED', 87.00, 120000.00, 120000.00, 0.00, 98, 92.00, 'Score 87 RED; 98 affected HH; ₱1,224/HH', 1, '2024-07-25 08:00:00', '2024-Q3', '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
+(2, 6, NULL, 'RED', 91.00, 135000.00, 130000.00, 0.00, 140, 94.50, 'Score 91 RED; 140 affected HH; ₱929/HH', 1, '2024-07-25 08:00:00', '2024-Q3', '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
+(3, 7, NULL, 'RED', 85.00, 115000.00, 115000.00, 0.00, 118, 89.00, 'Score 85 RED; 118 affected HH', 1, '2024-07-25 08:00:00', '2024-Q3', '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
+(4, 2, NULL, 'ORANGE', 72.00, 80000.00, 75000.00, 0.00, 52, 74.20, 'Score 72 ORANGE; 52 affected HH', 1, '2024-07-25 09:00:00', '2024-Q3', '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
+(5, 8, NULL, 'ORANGE', 62.00, 65000.00, 60000.00, 0.00, 68, 65.00, 'Score 62 ORANGE; 68 affected HH', 1, '2024-07-25 09:00:00', '2024-Q3', '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
 (6, 3, NULL, 'YELLOW', 45.00, 40000.00, 40000.00, 0.00, 0, 45.00, 'Score 45 YELLOW; no active event', 1, '2024-07-26 08:00:00', '2024-Q3', '2026-03-15 23:04:48', '2026-03-15 23:04:48');
 
 -- --------------------------------------------------------
@@ -372,6 +372,50 @@ INSERT INTO `model_registry` (`model_id`, `model_name`, `model_version`, `archit
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `pagasa_typhoon_imports`
+--
+
+CREATE TABLE `pagasa_typhoon_imports` (
+  `import_id` bigint(20) UNSIGNED NOT NULL,
+  `event_id` int(10) UNSIGNED NOT NULL,
+  `pagasa_name` varchar(120) NOT NULL,
+  `international_name` varchar(120) DEFAULT NULL,
+  `international_id` varchar(20) DEFAULT NULL,
+  `classification` varchar(60) NOT NULL,
+  `report_year` smallint(5) UNSIGNED NOT NULL,
+  `report_revision` smallint(5) UNSIGNED NOT NULL DEFAULT 0,
+  `report_published_at` date DEFAULT NULL,
+  `report_last_revised_at` date DEFAULT NULL,
+  `started_at_utc` datetime NOT NULL,
+  `ended_at_utc` datetime DEFAULT NULL,
+  `peak_intensity_at_utc` datetime DEFAULT NULL,
+  `peak_wind_kph` decimal(6,2) DEFAULT NULL,
+  `peak_wind_knots` decimal(6,2) DEFAULT NULL,
+  `minimum_pressure_hpa` decimal(7,2) DEFAULT NULL,
+  `developed_inside_par` tinyint(1) NOT NULL DEFAULT 0,
+  `exited_par` tinyint(1) NOT NULL DEFAULT 0,
+  `landfall_location` varchar(255) DEFAULT NULL,
+  `landfall_at_utc` datetime DEFAULT NULL,
+  `highest_tcws` tinyint(3) UNSIGNED DEFAULT NULL,
+  `bulletins_issued` smallint(5) UNSIGNED DEFAULT NULL,
+  `data_status` enum('Preliminary','Final') NOT NULL DEFAULT 'Preliminary',
+  `source_agency` varchar(120) NOT NULL DEFAULT 'DOST-PAGASA',
+  `source_type` varchar(120) NOT NULL DEFAULT 'Tropical Cyclone Preliminary Report',
+  `source_url` varchar(1000) DEFAULT NULL,
+  `original_filename` varchar(255) NOT NULL,
+  `stored_file_path` varchar(500) NOT NULL,
+  `file_sha256` char(64) NOT NULL,
+  `raw_extracted_text` longtext NOT NULL,
+  `raw_parsed_json` longtext NOT NULL,
+  `is_latest` tinyint(1) NOT NULL DEFAULT 1,
+  `supersedes_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `imported_by` int(10) UNSIGNED DEFAULT NULL,
+  `imported_at` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Immutable imports and revision history for official PAGASA tropical cyclone reports';
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `prediction_results`
 --
 
@@ -401,14 +445,14 @@ CREATE TABLE `prediction_results` (
 --
 
 INSERT INTO `prediction_results` (`prediction_id`, `street_id`, `model_id`, `feature_id`, `analysis_id`, `event_id`, `vulnerability_score`, `risk_level`, `needs_welfare`, `welfare_priority`, `image_contribution_pct`, `demographic_contribution_pct`, `historical_contribution_pct`, `model_confidence`, `prediction_note`, `trigger_type`, `triggered_by`, `predicted_at`) VALUES
-(1, 1, 2, 1, 1, 1, 87.00, 'RED', 'Yes', 1, 45.00, 35.00, 20.00, 0.9210, NULL, 'Event-Triggered', 1, '2024-07-24 13:00:00'),
-(2, 2, 2, 2, 4, 1, 72.00, 'ORANGE', 'Yes', 2, 30.00, 40.00, 30.00, 0.7120, NULL, 'Event-Triggered', 1, '2024-07-24 13:00:00'),
+(1, 1, 2, 1, 1, NULL, 87.00, 'RED', 'Yes', 1, 45.00, 35.00, 20.00, 0.9210, NULL, 'Event-Triggered', 1, '2024-07-24 13:00:00'),
+(2, 2, 2, 2, 4, NULL, 72.00, 'ORANGE', 'Yes', 2, 30.00, 40.00, 30.00, 0.7120, NULL, 'Event-Triggered', 1, '2024-07-24 13:00:00'),
 (3, 3, 2, 3, NULL, NULL, 45.00, 'YELLOW', 'Moderate', 3, 0.00, 60.00, 40.00, 0.7840, NULL, 'Scheduled', 1, '2024-07-24 13:00:00'),
 (4, 4, 2, 4, 5, NULL, 15.00, 'GREEN', 'No', 4, 20.00, 50.00, 30.00, 0.9610, NULL, 'Scheduled', 1, '2024-07-24 13:00:00'),
 (5, 5, 2, 5, NULL, NULL, 32.00, 'GREEN', 'No', 4, 0.00, 55.00, 45.00, 0.8230, NULL, 'Scheduled', 1, '2024-07-24 13:00:00'),
-(6, 6, 2, 6, 2, 1, 91.00, 'RED', 'Yes', 1, 50.00, 30.00, 20.00, 0.9540, NULL, 'Event-Triggered', 1, '2024-07-24 13:00:00'),
-(7, 7, 2, 7, 3, 1, 85.00, 'RED', 'Yes', 1, 42.00, 35.00, 23.00, 0.8730, NULL, 'Event-Triggered', 1, '2024-07-24 13:00:00'),
-(8, 8, 2, 8, NULL, 1, 62.00, 'ORANGE', 'Moderate', 2, 0.00, 45.00, 55.00, 0.7640, NULL, 'Event-Triggered', 1, '2024-07-24 13:00:00'),
+(6, 6, 2, 6, 2, NULL, 91.00, 'RED', 'Yes', 1, 50.00, 30.00, 20.00, 0.9540, NULL, 'Event-Triggered', 1, '2024-07-24 13:00:00'),
+(7, 7, 2, 7, 3, NULL, 85.00, 'RED', 'Yes', 1, 42.00, 35.00, 23.00, 0.8730, NULL, 'Event-Triggered', 1, '2024-07-24 13:00:00'),
+(8, 8, 2, 8, NULL, NULL, 62.00, 'ORANGE', 'Moderate', 2, 0.00, 45.00, 55.00, 0.7640, NULL, 'Event-Triggered', 1, '2024-07-24 13:00:00'),
 (9, 9, 2, 9, NULL, NULL, 25.00, 'GREEN', 'No', 4, 0.00, 60.00, 40.00, 0.8910, NULL, 'Scheduled', 1, '2024-07-24 13:00:00'),
 (10, 10, 2, 10, NULL, NULL, 12.00, 'GREEN', 'No', 4, 0.00, 65.00, 35.00, 0.9120, NULL, 'Scheduled', 1, '2024-07-24 13:00:00');
 
@@ -480,11 +524,11 @@ CREATE TABLE `resident_reports` (
 --
 
 INSERT INTO `resident_reports` (`report_id`, `user_id`, `street_id`, `event_id`, `report_type`, `severity`, `description`, `image_path`, `latitude`, `longitude`, `status`, `verified_by`, `verified_at`, `resolution_notes`, `created_at`, `updated_at`) VALUES
-(1, 4, 1, 1, 'Flood', 'Severe', 'Water reached floor level. Needs evacuation.', NULL, NULL, NULL, 'Resolved', 2, '2024-07-24 21:00:00', NULL, '2026-03-15 23:04:48', '2026-05-25 07:37:34'),
-(2, 6, 6, 1, 'Flood', 'Severe', 'Rizal Ave completely submerged. Cars floating.', NULL, NULL, NULL, 'Verified', 2, '2024-07-24 21:30:00', NULL, '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
-(3, 4, 7, 1, 'Damage', 'Severe', 'Two houses collapsed. Six families need shelter.', NULL, NULL, NULL, 'Verified', 2, '2024-07-24 22:00:00', NULL, '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
-(4, 4, 3, 1, 'Blocked Road', 'Moderate', 'Fallen tree blocking Mabini St.', NULL, NULL, NULL, 'Resolved', 2, '2024-07-25 07:00:00', NULL, '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
-(5, 6, 8, 1, 'Flood', 'Moderate', 'Luna St flood not receded. No clean water.', NULL, NULL, NULL, 'Resolved', 1, '2026-05-25 01:37:12', NULL, '2026-03-15 23:04:48', '2026-05-25 07:37:12'),
+(1, 4, 1, NULL, 'Flood', 'Severe', 'Water reached floor level. Needs evacuation.', NULL, NULL, NULL, 'Resolved', 2, '2024-07-24 21:00:00', NULL, '2026-03-15 23:04:48', '2026-05-25 07:37:34'),
+(2, 6, 6, NULL, 'Flood', 'Severe', 'Rizal Ave completely submerged. Cars floating.', NULL, NULL, NULL, 'Verified', 2, '2024-07-24 21:30:00', NULL, '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
+(3, 4, 7, NULL, 'Damage', 'Severe', 'Two houses collapsed. Six families need shelter.', NULL, NULL, NULL, 'Verified', 2, '2024-07-24 22:00:00', NULL, '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
+(4, 4, 3, NULL, 'Blocked Road', 'Moderate', 'Fallen tree blocking Mabini St.', NULL, NULL, NULL, 'Resolved', 2, '2024-07-25 07:00:00', NULL, '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
+(5, 6, 8, NULL, 'Flood', 'Moderate', 'Luna St flood not receded. No clean water.', NULL, NULL, NULL, 'Resolved', 1, '2026-05-25 01:37:12', NULL, '2026-03-15 23:04:48', '2026-05-25 07:37:12'),
 (6, 7, 4, NULL, 'Flood', 'Moderate', 'asdadasda', 'uploads/reports/2026/03/rpt_7_1774073660_bcd649bc.jpg', 14.7473750, 121.0468670, 'Pending', NULL, NULL, NULL, '2026-03-21 14:14:20', '2026-03-21 14:14:20'),
 (7, 7, 10, NULL, 'Flood', 'Moderate', 'asdasd', 'uploads/reports/2026/03/rpt_7_1774074809_a01cd90e.jpg', 14.7473550, 121.0468430, 'Dismissed', 1, '2026-04-08 16:28:32', NULL, '2026-03-21 14:33:29', '2026-04-08 22:31:45'),
 (8, 7, 7, NULL, 'Flood', 'Moderate', NULL, 'uploads/reports/2026/05/rpt_7_1779714754_bc866033.jpg', 14.7097000, 121.0450000, 'Pending', NULL, NULL, NULL, '2026-05-25 21:12:34', '2026-05-25 21:12:34'),
@@ -548,12 +592,12 @@ CREATE TABLE `resource_distributions` (
 --
 
 INSERT INTO `resource_distributions` (`dist_id`, `street_id`, `resource_id`, `event_id`, `qty_distributed`, `unit_cost_at_time`, `distributed_by`, `distributed_at`, `recipient_count`, `notes`) VALUES
-(1, 1, 1, 1, 200, 350.00, 2, '2026-03-15 23:04:48', 98, NULL),
-(2, 6, 1, 1, 250, 350.00, 2, '2026-03-15 23:04:48', 140, NULL),
-(3, 7, 1, 1, 180, 350.00, 2, '2026-03-15 23:04:48', 118, NULL),
-(4, 1, 4, 1, 30, 4500.00, 2, '2026-03-15 23:04:48', 30, NULL),
-(5, 6, 2, 1, 50, 820.00, 2, '2026-03-15 23:04:48', 50, NULL),
-(6, 8, 3, 1, 1800, 15.00, 2, '2026-03-15 23:04:48', 68, NULL),
+(1, 1, 1, NULL, 200, 350.00, 2, '2026-03-15 23:04:48', 98, NULL),
+(2, 6, 1, NULL, 250, 350.00, 2, '2026-03-15 23:04:48', 140, NULL),
+(3, 7, 1, NULL, 180, 350.00, 2, '2026-03-15 23:04:48', 118, NULL),
+(4, 1, 4, NULL, 30, 4500.00, 2, '2026-03-15 23:04:48', 30, NULL),
+(5, 6, 2, NULL, 50, 820.00, 2, '2026-03-15 23:04:48', 50, NULL),
+(6, 8, 3, NULL, 1800, 15.00, 2, '2026-03-15 23:04:48', 68, NULL),
 (7, 8, 3, NULL, 2000, 15.00, 1, '2026-05-24 23:38:00', 5, NULL);
 
 -- --------------------------------------------------------
@@ -711,6 +755,21 @@ INSERT INTO `tags` (`tag_id`, `name`, `slug`, `color`, `is_predefined`, `created
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `typhoon_demo_imports`
+--
+
+CREATE TABLE `typhoon_demo_imports` (
+  `event_id` int(10) UNSIGNED NOT NULL,
+  `demo_key` varchar(80) NOT NULL,
+  `content_sha256` char(64) NOT NULL,
+  `imported_json` longtext NOT NULL,
+  `imported_by` int(10) UNSIGNED DEFAULT NULL,
+  `imported_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `typhoon_events`
 --
 
@@ -729,15 +788,6 @@ CREATE TABLE `typhoon_events` (
   `created_at` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Named typhoon / disaster events';
 
---
--- Dumping data for table `typhoon_events`
---
-
-INSERT INTO `typhoon_events` (`event_id`, `event_name`, `local_name`, `category`, `landfall_date`, `date_started`, `date_ended`, `wind_speed_kph`, `status`, `notes`, `created_by`, `created_at`) VALUES
-(1, 'Typhoon Egay', 'Egay', 3, NULL, '2024-07-23', '2024-07-25', 185.00, 'Passed', NULL, 1, '2026-03-15 23:04:48'),
-(2, 'Typhoon Falcon', 'Falcon', 2, NULL, '2024-08-10', NULL, 140.00, 'Active', NULL, 1, '2026-03-15 23:04:48'),
-(3, 'Typhoon Badong', 'Badong', 3, '2026-05-24', '2026-05-23', NULL, 185.00, 'Monitoring', NULL, NULL, '2026-05-25 08:51:19');
-
 -- --------------------------------------------------------
 
 --
@@ -754,23 +804,11 @@ CREATE TABLE `typhoon_street_impacts` (
   `road_accessible` tinyint(1) DEFAULT 1,
   `affected_households` int(10) UNSIGNED DEFAULT 0,
   `affected_persons` int(10) UNSIGNED DEFAULT 0,
-  `report_source` enum('AI','Staff','Resident','PAGASA') NOT NULL DEFAULT 'Staff',
+  `report_source` enum('AI','Staff','Resident','PAGASA','Demo') NOT NULL DEFAULT 'Staff',
   `notes` text DEFAULT NULL,
   `recorded_by` int(10) UNSIGNED DEFAULT NULL,
   `date_recorded` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Street-level typhoon impacts — Feature 4';
-
---
--- Dumping data for table `typhoon_street_impacts`
---
-
-INSERT INTO `typhoon_street_impacts` (`impact_id`, `event_id`, `street_id`, `flood_status`, `damage_status`, `flood_height_m`, `road_accessible`, `affected_households`, `affected_persons`, `report_source`, `notes`, `recorded_by`, `date_recorded`) VALUES
-(1, 1, 1, 'Severely Flooded', 'Moderate Damage', 1.80, 0, 98, 452, 'AI', NULL, 2, '2024-07-24 18:00:00'),
-(2, 1, 6, 'Severely Flooded', 'Moderate Damage', 2.10, 0, 140, 628, 'AI', NULL, 2, '2024-07-24 18:30:00'),
-(3, 1, 7, 'Flooded', 'Severely Damaged', 1.95, 0, 118, 540, 'Staff', NULL, 2, '2024-07-24 19:00:00'),
-(4, 1, 2, 'Flooded', 'Minor Damage', 0.90, 1, 52, 238, 'Staff', NULL, 2, '2024-07-24 19:30:00'),
-(5, 1, 8, 'Flooded', 'Moderate Damage', 0.75, 1, 68, 312, 'Resident', NULL, 2, '2024-07-24 20:00:00'),
-(6, 3, 1, 'Severely Flooded', 'Severely Damaged', 2.50, 1, 225, 300, 'Staff', NULL, NULL, '2026-05-25 09:01:27');
 
 -- --------------------------------------------------------
 
@@ -805,10 +843,10 @@ CREATE TABLE `uploaded_images` (
 --
 
 INSERT INTO `uploaded_images` (`image_id`, `street_id`, `event_id`, `uploaded_by`, `original_filename`, `stored_filename`, `file_path`, `file_size_kb`, `mime_type`, `width_px`, `height_px`, `capture_date`, `capture_lat`, `capture_lng`, `capture_device`, `is_processed`, `is_active`, `notes`, `uploaded_at`) VALUES
-(1, 1, 1, 2, 'sampaguita_flood_01.jpg', 'st1_evt1_20240724_001.jpg', 'uploads/streets/2024/07/st1_evt1_20240724_001.jpg', NULL, 'image/jpeg', NULL, NULL, '2024-07-24 09:00:00', NULL, NULL, NULL, 1, 1, NULL, '2026-03-15 23:04:48'),
-(2, 6, 1, 2, 'rizal_flood_01.jpg', 'st6_evt1_20240724_001.jpg', 'uploads/streets/2024/07/st6_evt1_20240724_001.jpg', NULL, 'image/jpeg', NULL, NULL, '2024-07-24 09:30:00', NULL, NULL, NULL, 1, 1, NULL, '2026-03-15 23:04:48'),
-(3, 7, 1, 2, 'bonifacio_damage_01.jpg', 'st7_evt1_20240724_001.jpg', 'uploads/streets/2024/07/st7_evt1_20240724_001.jpg', NULL, 'image/jpeg', NULL, NULL, '2024-07-24 10:00:00', NULL, NULL, NULL, 1, 1, NULL, '2026-03-15 23:04:48'),
-(4, 2, 1, 2, 'narra_partial_01.jpg', 'st2_evt1_20240724_001.jpg', 'uploads/streets/2024/07/st2_evt1_20240724_001.jpg', NULL, 'image/jpeg', NULL, NULL, '2024-07-24 10:30:00', NULL, NULL, NULL, 1, 1, NULL, '2026-03-15 23:04:48'),
+(1, 1, NULL, 2, 'sampaguita_flood_01.jpg', 'st1_evt1_20240724_001.jpg', 'uploads/streets/2024/07/st1_evt1_20240724_001.jpg', NULL, 'image/jpeg', NULL, NULL, '2024-07-24 09:00:00', NULL, NULL, NULL, 1, 1, NULL, '2026-03-15 23:04:48'),
+(2, 6, NULL, 2, 'rizal_flood_01.jpg', 'st6_evt1_20240724_001.jpg', 'uploads/streets/2024/07/st6_evt1_20240724_001.jpg', NULL, 'image/jpeg', NULL, NULL, '2024-07-24 09:30:00', NULL, NULL, NULL, 1, 1, NULL, '2026-03-15 23:04:48'),
+(3, 7, NULL, 2, 'bonifacio_damage_01.jpg', 'st7_evt1_20240724_001.jpg', 'uploads/streets/2024/07/st7_evt1_20240724_001.jpg', NULL, 'image/jpeg', NULL, NULL, '2024-07-24 10:00:00', NULL, NULL, NULL, 1, 1, NULL, '2026-03-15 23:04:48'),
+(4, 2, NULL, 2, 'narra_partial_01.jpg', 'st2_evt1_20240724_001.jpg', 'uploads/streets/2024/07/st2_evt1_20240724_001.jpg', NULL, 'image/jpeg', NULL, NULL, '2024-07-24 10:30:00', NULL, NULL, NULL, 1, 1, NULL, '2026-03-15 23:04:48'),
 (5, 4, NULL, 2, 'acacia_normal_01.jpg', 'st4_20240724_001.jpg', 'uploads/streets/2024/07/st4_20240724_001.jpg', NULL, 'image/jpeg', NULL, NULL, '2024-07-24 11:00:00', NULL, NULL, NULL, 1, 1, NULL, '2026-03-15 23:04:48'),
 (6, 4, NULL, 7, 'flood_6.jpg', 'rpt_7_1774073660_bcd649bc.jpg', 'uploads/reports/2026/03/rpt_7_1774073660_bcd649bc.jpg', NULL, 'image/jpeg', NULL, NULL, NULL, 14.7473750, 121.0468670, NULL, 0, 1, NULL, '2026-03-21 14:14:20'),
 (7, 10, NULL, 7, 'flood_6.jpg', 'rpt_7_1774074809_a01cd90e.jpg', 'uploads/reports/2026/03/rpt_7_1774074809_a01cd90e.jpg', NULL, 'image/jpeg', NULL, NULL, NULL, 14.7473550, 121.0468430, NULL, 0, 1, NULL, '2026-03-21 14:33:29'),
@@ -839,7 +877,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `phone_number`, `is_active`, `last_login_at`, `created_at`, `updated_at`) VALUES
-(1, 'Maria Santos', 'admin@equiaid.gov.ph', '$2y$10$WXqKgebQWKzwJvLiXyeMq.mbcsnqr5ERLf2wemg/6/Qj1pbpPpPd6', 'admin', '09171234567', 1, '2026-09-05 15:18:24', '2026-03-15 23:04:48', '2026-09-05 15:18:24'),
+(1, 'Maria Santos', 'admin@equiaid.gov.ph', '$2y$10$WXqKgebQWKzwJvLiXyeMq.mbcsnqr5ERLf2wemg/6/Qj1pbpPpPd6', 'admin', '09171234567', 1, '2026-11-10 23:02:35', '2026-03-15 23:04:48', '2026-11-10 23:02:35'),
 (2, 'Juan dela Cruz', 'staff1@equiaid.gov.ph', '$2y$10$WXqKgebQWKzwJvLiXyeMq.mbcsnqr5ERLf2wemg/6/Qj1pbpPpPd6', 'staff', '09181234567', 1, '2026-09-06 13:33:10', '2026-03-15 23:04:48', '2026-09-06 13:33:10'),
 (3, 'Rosa Reyes', 'dswd@equiaid.gov.ph', '$2y$10$WXqKgebQWKzwJvLiXyeMq.mbcsnqr5ERLf2wemg/6/Qj1pbpPpPd6', 'dswd_officer', '09191234567', 1, NULL, '2026-03-15 23:04:48', '2026-03-18 19:42:39'),
 (4, 'Pedro Gonzales', 'resident1@gmail.com', '$2y$10$WXqKgebQWKzwJvLiXyeMq.mbcsnqr5ERLf2wemg/6/Qj1pbpPpPd6', 'resident', '09201234567', 1, NULL, '2026-03-15 23:04:48', '2026-03-18 19:42:39'),
@@ -885,11 +923,11 @@ CREATE TABLE `welfare_action_plans` (
 --
 
 INSERT INTO `welfare_action_plans` (`plan_id`, `street_id`, `event_id`, `assistance_type`, `description`, `status`, `vuln_score_before`, `vuln_score_after`, `priority`, `needs_json`, `steps_json`, `beneficiary_type`, `beneficiary_name`, `target_date`, `remarks`, `risk_level_before`, `risk_level_after`, `planned_date`, `started_at`, `completed_at`, `assigned_to`, `created_by`, `created_at`, `updated_at`) VALUES
-(1, 1, 1, 'Food Distribution', '200 food packs for 98 households along Sampaguita St.', 'Completed', 87.00, NULL, 'Medium', NULL, NULL, 'street', NULL, NULL, NULL, 'RED', NULL, '2024-07-25', '2024-07-25 14:00:00', '2024-07-25 18:00:00', 2, 1, '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
-(2, 6, 1, 'Food Distribution', '250 food packs for 140 households along Rizal Ave.', 'Completed', 91.00, NULL, 'Medium', NULL, NULL, 'street', NULL, NULL, NULL, 'RED', NULL, '2024-07-25', '2024-07-25 15:00:00', '2024-07-25 19:00:00', 2, 1, '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
-(3, 7, 1, 'Medical Assistance', 'Medical team deployed to Bonifacio St for injuries/trauma.', 'Completed', 85.00, NULL, 'Medium', NULL, NULL, 'street', NULL, NULL, NULL, 'RED', NULL, '2024-07-26', '2024-07-26 08:00:00', '2024-07-26 17:00:00', 2, 1, '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
-(4, 8, 1, 'Water Supply', 'Clean water distribution — 1,800 liters to Luna St.', 'Completed', 62.00, NULL, 'Medium', NULL, NULL, 'street', NULL, NULL, NULL, 'ORANGE', NULL, '2024-07-26', '2024-07-26 09:00:00', '2024-07-26 14:00:00', 2, 1, '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
-(6, 2, 1, 'Food Distribution', 'Follow-up distribution for 52 affected HH in Narra St.', 'Ongoing', 72.00, NULL, 'Medium', NULL, NULL, 'street', NULL, NULL, NULL, 'ORANGE', NULL, '2024-07-27', '2024-07-27 10:00:00', NULL, 2, 1, '2026-03-15 23:04:48', '2026-03-15 23:04:48');
+(1, 1, NULL, 'Food Distribution', '200 food packs for 98 households along Sampaguita St.', 'Completed', 87.00, NULL, 'Medium', NULL, NULL, 'street', NULL, NULL, NULL, 'RED', NULL, '2024-07-25', '2024-07-25 14:00:00', '2024-07-25 18:00:00', 2, 1, '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
+(2, 6, NULL, 'Food Distribution', '250 food packs for 140 households along Rizal Ave.', 'Completed', 91.00, NULL, 'Medium', NULL, NULL, 'street', NULL, NULL, NULL, 'RED', NULL, '2024-07-25', '2024-07-25 15:00:00', '2024-07-25 19:00:00', 2, 1, '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
+(3, 7, NULL, 'Medical Assistance', 'Medical team deployed to Bonifacio St for injuries/trauma.', 'Completed', 85.00, NULL, 'Medium', NULL, NULL, 'street', NULL, NULL, NULL, 'RED', NULL, '2024-07-26', '2024-07-26 08:00:00', '2024-07-26 17:00:00', 2, 1, '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
+(4, 8, NULL, 'Water Supply', 'Clean water distribution — 1,800 liters to Luna St.', 'Completed', 62.00, NULL, 'Medium', NULL, NULL, 'street', NULL, NULL, NULL, 'ORANGE', NULL, '2024-07-26', '2024-07-26 09:00:00', '2024-07-26 14:00:00', 2, 1, '2026-03-15 23:04:48', '2026-03-15 23:04:48'),
+(6, 2, NULL, 'Food Distribution', 'Follow-up distribution for 52 affected HH in Narra St.', 'Ongoing', 72.00, NULL, 'Medium', NULL, NULL, 'street', NULL, NULL, NULL, 'ORANGE', NULL, '2024-07-27', '2024-07-27 10:00:00', NULL, 2, 1, '2026-03-15 23:04:48', '2026-03-15 23:04:48');
 
 -- --------------------------------------------------------
 
@@ -1011,6 +1049,18 @@ ALTER TABLE `model_registry`
   ADD KEY `fk_mr_user` (`created_by`);
 
 --
+-- Indexes for table `pagasa_typhoon_imports`
+--
+ALTER TABLE `pagasa_typhoon_imports`
+  ADD PRIMARY KEY (`import_id`),
+  ADD UNIQUE KEY `uq_pagasa_file_hash` (`file_sha256`),
+  ADD UNIQUE KEY `uq_pagasa_report_revision` (`report_year`,`pagasa_name`,`report_revision`),
+  ADD KEY `idx_pagasa_event_latest` (`event_id`,`is_latest`),
+  ADD KEY `idx_pagasa_identity` (`report_year`,`pagasa_name`),
+  ADD KEY `fk_pagasa_import_user` (`imported_by`),
+  ADD KEY `fk_pagasa_supersedes` (`supersedes_id`);
+
+--
 -- Indexes for table `prediction_results`
 --
 ALTER TABLE `prediction_results`
@@ -1110,6 +1160,13 @@ ALTER TABLE `tags`
   ADD UNIQUE KEY `uq_tags_slug` (`slug`),
   ADD KEY `idx_tags_name` (`name`),
   ADD KEY `fk_tags_created_by` (`created_by`);
+
+--
+-- Indexes for table `typhoon_demo_imports`
+--
+ALTER TABLE `typhoon_demo_imports`
+  ADD PRIMARY KEY (`event_id`),
+  ADD UNIQUE KEY `uq_demo_key` (`demo_key`);
 
 --
 -- Indexes for table `typhoon_events`
@@ -1229,6 +1286,12 @@ ALTER TABLE `model_registry`
   MODIFY `model_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
+-- AUTO_INCREMENT for table `pagasa_typhoon_imports`
+--
+ALTER TABLE `pagasa_typhoon_imports`
+  MODIFY `import_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
+
+--
 -- AUTO_INCREMENT for table `prediction_results`
 --
 ALTER TABLE `prediction_results`
@@ -1286,13 +1349,13 @@ ALTER TABLE `tags`
 -- AUTO_INCREMENT for table `typhoon_events`
 --
 ALTER TABLE `typhoon_events`
-  MODIFY `event_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `event_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=54;
 
 --
 -- AUTO_INCREMENT for table `typhoon_street_impacts`
 --
 ALTER TABLE `typhoon_street_impacts`
-  MODIFY `impact_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `impact_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=507;
 
 --
 -- AUTO_INCREMENT for table `uploaded_images`
@@ -1385,6 +1448,14 @@ ALTER TABLE `model_registry`
   ADD CONSTRAINT `fk_mr_user` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
+-- Constraints for table `pagasa_typhoon_imports`
+--
+ALTER TABLE `pagasa_typhoon_imports`
+  ADD CONSTRAINT `fk_pagasa_import_event` FOREIGN KEY (`event_id`) REFERENCES `typhoon_events` (`event_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_pagasa_import_user` FOREIGN KEY (`imported_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_pagasa_supersedes` FOREIGN KEY (`supersedes_id`) REFERENCES `pagasa_typhoon_imports` (`import_id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
 -- Constraints for table `prediction_results`
 --
 ALTER TABLE `prediction_results`
@@ -1452,6 +1523,12 @@ ALTER TABLE `street_welfare_needs`
 --
 ALTER TABLE `tags`
   ADD CONSTRAINT `fk_tags_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `typhoon_demo_imports`
+--
+ALTER TABLE `typhoon_demo_imports`
+  ADD CONSTRAINT `fk_demo_event` FOREIGN KEY (`event_id`) REFERENCES `typhoon_events` (`event_id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `typhoon_events`

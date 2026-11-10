@@ -1,0 +1,25 @@
+column,definition,example
+pagasa_name,Official Philippine cyclone name.,AGHON
+international_name,International cyclone name when explicitly identified on report cover; blank otherwise.,EWINIAR
+international_id,International cyclone identifier printed on report cover; blank otherwise.,2401
+classification,"Cyclone classification printed in report title; lifetime classification, not street hazard level.",Typhoon
+report_year,Event year identified by the official report filename.,2024
+report_revision,Revision from published filename; 0 for unnumbered initial reports.,2
+report_published_at,Original report publication date in YYYY-MM-DD.,12/31/24
+report_last_revised_at,Revision date printed on report cover; blank if absent or not extracted.,3/6/25
+started_at_utc,Development into a tropical cyclone; ISO UTC timestamp. Not PAR entry date.,2024-05-23T12:00:00Z
+ended_at_utc,Remnant-low/post-tropical transition; ISO UTC timestamp. Not PAR exit date.,2024-05-30T18:00:00Z
+peak_intensity_at_utc,First listed lifetime peak timestamp; blank if missing or outside stated lifetime. See quality_notes.,2024-05-26T15:00:00Z
+peak_wind_kph,Lifetime peak sustained wind in km/h as printed; not local wind at Bagong Silang.,140
+peak_wind_knots,Lifetime peak sustained wind in knots as printed.,75
+minimum_pressure_hpa,"Pressure printed alongside lifetime peak intensity, in hPa.",965
+data_status,Preliminary: PAGASA preliminary report; does not mean final best track.,Preliminary
+source_agency,Issuing authority: DOST-PAGASA.,DOST-PAGASA
+source_type,Tropical Cyclone Preliminary Report.,Tropical Cyclone Preliminary Report
+source_url,Direct official PDF URL verified by downloading source bytes.,https://pubfiles.pagasa.dost.gov.ph/pagasaweb/files/tamss/weather/tcprelimsummary/PAGASA_Prelim_2024_AGHON_Rev.2.pdf
+original_filename,Exact downloaded official PDF filename.,PAGASA_Prelim_2024_AGHON_Rev.2.pdf
+file_sha256,"SHA-256 of downloaded PDF; verify against packaged source file. Hash is traceability, not a digital signature.",6868e09cbbf5e0ef1884b5654bbe2583c55cafe370c324da34eac9ba43ed044d
+source_pages,Report cover and meteorological summary page numbers (1-based).,2-Jan
+dataset_type,"ACTUAL_SOURCE_EXTRACT; actual published facts, no simulated records.",ACTUAL_SOURCE_EXTRACT
+impact_data_available,0: this dataset does not supply verified Bagong Silang street impacts; not a statement of zero impact.,0
+quality_notes,Extraction caveats and source inconsistencies. Blank values are unknown/unavailable; never silently replace with zero.,Values extracted from official report; no local impacts inferred.

@@ -1,0 +1,16 @@
+MATCHED STREET IMPACT CSV
+
+500 sample assessments = 50 typhoons from the supplied PAGASA catalogue x 10 existing streets.
+These generated local impacts are sample data; PAGASA weather records do not establish street damage.
+
+1. Import pagasa_actual_50_typhoons_2024_2026.csv using Import PAGASA Data first.
+2. Click Import Impact CSV and upload pagasa_50_typhoons_street_impacts_500.csv.
+3. Preview the matched event names/years and create/update totals, then confirm.
+4. Select INDAY (2026): only the 10 INDAY 2026 assessments appear.
+5. INDAY_2026_street_impacts.csv may be used to import only that event.
+
+Identity = pagasa_name + report_year. Each assessment also requires street_id.
+Repeat imports skip unchanged rows. Changed rows update only the matching event/street.
+Events and PAGASA weather details are not created or modified by impact imports.
+Export Excel as CSV UTF-8 before uploading; native .xlsx files are not accepted.
+The download in the admin modal contains only column headers and one format example.

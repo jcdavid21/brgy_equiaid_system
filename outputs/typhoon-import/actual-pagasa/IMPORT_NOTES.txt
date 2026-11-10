@@ -1,0 +1,17 @@
+Actual PAGASA cyclone records for the proposed EQUIAID import revision
+
+50 unique cyclones: 18 reports from 2024, 23 from 2025, and 9 from 2026.
+Downloaded from https://bagong.pagasa.dost.gov.ph/tropical-cyclone/publications/preliminary-report
+Collected on 2026-11-10 (Asia/Manila).
+
+Each row represents one actual cyclone event, not a street observation. Values were extracted from the downloaded official PDF cover and meteorological summary. UTC timestamps and numeric formats were normalized; local impacts were not inferred. This is an extracted CSV, not an official PAGASA-issued CSV.
+
+The Typhoon Impact page now supports this reviewed CSV: Import PAGASA Data > CSV > Preview CSV > Confirm Import. Download the reviewed dataset from the import dialog if needed. The server accepts the full dataset or unchanged subsets, rejects edited/unrecognized rows, and skips already-stored or newer revisions. Historical event status is derived from the completed source lifecycle. Manual event status and impact entry are disabled. On another installation, run database/migrate-pagasa-imports.php with PHP CLI to install the source-history table before use; the web server also needs write access to the protected uploads/pagasa source archive.
+
+No editable event status is supplied. A future importer should derive the historical status from verified source facts. No fabricated affected-household counts, street IDs, flood heights, or damage assessments are included. An impact_data_available value of 0 means no local impacts are supplied in this CSV; it does not mean that no damage occurred.
+
+Blank values mean unavailable, absent, or deliberately withheld because of a source inconsistency. Read quality_notes before import. Reports with a lifetime peak date outside the stated cyclone lifetime have that timestamp left blank rather than silently corrected. Peak wind/pressure remain as printed. Some unnamed cyclones have no international name or ID.
+
+Sources are preliminary reports and can be superseded by PAGASA's annual report. File hashes identify the downloaded bytes, not digital signatures. Verify source URLs and hashes on the server before treating an uploaded CSV as trusted.
+
+The earlier SYNTHETIC CSVs in the parent folder are development fixtures only. Use this actual-pagasa folder for actual-source event data.

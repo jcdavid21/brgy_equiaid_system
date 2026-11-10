@@ -1,0 +1,33 @@
+BAGONG SILANG, NORTH CALOOCAN - SYNTHETIC IMPORT DATA
+
+50 street assessment records = 5 fictional typhoon scenarios x 10 existing streets.
+The names, weather values, dates, and impacts are invented for demonstration.
+Street IDs/names and population limits match the current application database.
+These labels are system fixtures, not independently verified street geography.
+
+IMPORT STEPS
+1. Open admin/typhoon-impact.php and click Import Impact CSV.
+   Alternatively, open Import PAGASA Data and choose Street Impact CSV - street assessments.
+2. Choose bagong_silang_typhoon_street_impacts_50.csv.
+3. Preview the CSV, then confirm the import.
+4. In Select Typhoon Event, choose Typhoon ALON, BUKAL, DALUYONG, KIDLAT, or SIGWA.
+5. Switch between these events to see different impact totals and map records.
+
+The CSV uses the existing demo importer and creates five separate events.
+It does not attach dummy reports to the currently selected official NANDO event.
+Reimporting this unchanged file skips existing demo records.
+No application database records were imported while generating this file.
+If the importer reports missing schema, the project's existing demo migration is:
+/Applications/XAMPP/xamppfiles/bin/php database/migrate-demo-impacts.php
+
+EXPECTED DASHBOARD TOTALS
+Damaged = Moderate Damage or Severely Damaged (matching dashboard calculation).
+
+Event | Impacted | Flooded | Damaged | Inaccessible | Households | Persons
+Typhoon ALON | 4 | 4 | 0 | 0 | 46 | 213
+Typhoon BUKAL | 6 | 6 | 0 | 1 | 204 | 948
+Typhoon DALUYONG | 9 | 7 | 1 | 3 | 377 | 1758
+Typhoon KIDLAT | 10 | 8 | 3 | 4 | 550 | 2565
+Typhoon SIGWA | 10 | 8 | 5 | 5 | 691 | 3223
+
+Risk and welfare use existing system records; this CSV supplies event-specific street impacts only.

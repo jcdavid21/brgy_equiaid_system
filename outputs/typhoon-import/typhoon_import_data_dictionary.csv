@@ -1,0 +1,29 @@
+column,requirement,example,description
+schema_version,required,1.0,Proposed CSV contract; importer is not implemented yet.
+dataset_type,required,SYNTHETIC,This sample is development data; every weather and impact value is fictional.
+event_key,required,DEMO-2026-001,Stable event identity repeated on every row; not a database event_id.
+local_name,required,DEMO,Fictional cyclone name for testing; not an official PAGASA event.
+international_name,optional,DEMO-CYCLONE,Fictional international name for testing.
+classification,required,Typhoon,Tropical Depression | Tropical Storm | Severe Tropical Storm | Typhoon | Super Typhoon.
+report_year,required,2026,Year of the event.
+report_revision,required,1,Positive integer; all rows in a batch must agree.
+report_published_at,required,2026-01-15,ISO date; fictional in sample.
+started_at_utc,required,2026-01-10T00:00:00Z,ISO UTC timestamp; fictional in sample.
+ended_at_utc,optional,2026-01-12T12:00:00Z,"ISO UTC timestamp; blank means not reported, not proof of current activity."
+peak_wind_kph,optional,150,Numeric km/h; fictional in sample.
+minimum_pressure_hpa,optional,970,Numeric hPa; fictional in sample.
+street_id,required,1,"Existing seed street_id, not a globally stable street code; validate against live streets."
+street_name,required,Sampaguita St,Must match the street_id and location; copied from repository seed SQL.
+zone_id,required,1,Must match the street record.
+barangay,required,Bagong Silang,Must match the street record.
+city,required,Caloocan City,Must match the street record.
+observed_at,required,2026-01-11T02:00:00Z,ISO timestamp with timezone; fictional in sample.
+flood_status,optional,Flooded,None | Flooded | Severely Flooded; blank means not reported.
+flood_height_m,optional,0.8,Nonnegative meters; blank means not reported.
+damage_status,optional,Minor Damage,None | Minor Damage | Moderate Damage | Severely Damaged; blank means not reported.
+road_accessible,optional,1,1 accessible; 0 inaccessible; blank not reported.
+affected_households,optional,20,Nonnegative integer; blank not reported; zero is an explicit zero.
+affected_persons,optional,80,Nonnegative integer; blank not reported; zero is an explicit zero.
+source_agency,required,SYNTHETIC - DEVELOPMENT ONLY,Never label generated values as PAGASA or LGU observations.
+source_url,optional,,Blank in generated sample: no official source exists for fictional values.
+notes,optional,SYNTHETIC TEST DATA - NOT AN OFFICIAL REPORT,CSV cannot prove authenticity; verify real source files outside user-controlled columns. No editable typhoon status column is supplied.
