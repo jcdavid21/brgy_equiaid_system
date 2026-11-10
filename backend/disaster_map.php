@@ -24,6 +24,7 @@ if (empty($_SESSION['user_id'])) {
 }
 
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/welfare-plan-display.php';
 require_once __DIR__ . '/env.php';
 
 if (!$pdo) {
@@ -233,7 +234,7 @@ try {
                     wap.planned_date ASC
             ")->fetchAll(PDO::FETCH_ASSOC);
 
-            echo json_encode(['ok' => true, 'welfare' => $rows]);
+            echo json_encode(['ok' => true, 'welfare' => array_map('welfarePlanForDisplay', $rows)]);
             break;
 
         default:

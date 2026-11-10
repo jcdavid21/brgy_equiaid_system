@@ -19,6 +19,7 @@ if ($action === '') {
 
 // ── DB connection ─────────────────────────────────────────
 require_once __DIR__ . '/db.php';   // provides $pdo
+require_once __DIR__ . '/welfare-plan-display.php';
 
 if (!$pdo) {
     http_response_code(503);
@@ -206,7 +207,7 @@ try {
                     'tag'      => 'Welfare Action',
                     'tag_icon' => 'fa-solid fa-hand-holding-heart',
                     'title'    => $p['assistance_type'] . ' — ' . $p['street_name'],
-                    'preview'  => $p['description']
+                    'preview'  => welfarePlanDescription($p['description'])
                                   ?? $p['assistance_type'] . ' provided to residents of '
                                      . $p['street_name'] . ' (' . $p['zone_name'] . ')'
                                      . '. Status: ' . $p['status'] . '.',

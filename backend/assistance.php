@@ -24,6 +24,7 @@ if (empty($_SESSION['user_id'])) {
 }
 
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/welfare-plan-display.php';
 
 if (!$pdo) {
     http_response_code(503);
@@ -118,7 +119,7 @@ try {
                     wap.planned_date DESC
             ")->fetchAll(PDO::FETCH_ASSOC);
 
-            echo json_encode(['ok' => true, 'plans' => $rows]);
+            echo json_encode(['ok' => true, 'plans' => array_map('welfarePlanForDisplay', $rows)]);
             break;
 
         // ── RESOURCE DISTRIBUTIONS ────────────────────────

@@ -5,6 +5,7 @@ header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
 
 require_once __DIR__ . '/db.php';   // provides $pdo
+require_once __DIR__ . '/welfare-plan-display.php';
 
 function respond(array $payload, int $status = 200): void
 {
@@ -274,7 +275,7 @@ switch ($action) {
             LIMIT 5
         ");
         $stmt->execute([':id' => $id]);
-        $plans = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $plans = array_map('welfarePlanForDisplay', $stmt->fetchAll(PDO::FETCH_ASSOC));
 
         // ── Resource distributions ─────────────────────────
         $stmt = $pdo->prepare("
