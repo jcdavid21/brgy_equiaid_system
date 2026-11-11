@@ -328,9 +328,10 @@ function renderResults(flood) {
     // ── Confidence & flood validity check ─────────────────
     const confPct    = flood.confidence * 100;
     const isLowConf  = flood.confidence < MIN_CONFIDENCE_FLOOD;
-    const isFloodSig = !flood.false_positive && flood.flood_pct >= MIN_FLOOD_PCT;
+    const isFloodSig = flood.status === 'confirmed' || (!flood.false_positive && flood.flood_pct >= MIN_FLOOD_PCT);
 
-    validationIssues.lowConfidence = (typeSelect.value === 'Flood') && isLowConf;
+    const needsReview = flood.status === 'candidate' || flood.status === 'uncertain';
+    validationIssues.lowConfidence = (typeSelect.value === 'Flood') && isLowConf && !needsReview;
     updateWarningPanel();
 
     // ── Flood panel ───────────────────────────────────────
@@ -343,7 +344,7 @@ function renderResults(flood) {
     yoloSmallImg.src  = `data:image/png;base64,${flood.yolo_small_b64}`;
 
     // ── AI summary banner ─────────────────────────────────
-    const isFlood = flood.flood_pct > 15 && !flood.false_positive;
+    const isFlood = isFloodSig;
 
     // Find detection-view panels (Fast + Detailed) to hide when not a flood
     const riItems = document.querySelectorAll('.ri-item');
@@ -352,7 +353,44 @@ function renderResults(flood) {
         return label && (label.textContent.includes('Detection'));
     });
 
-    if (flood.false_positive) {
+    if (flood.status === 'non_flood') {
+        floodPct.textContent = '0%';
+        floodConf.textContent = '—';
+        floodSevBanner.className = 'severity-banner sev-none';
+        floodSevLabel.textContent = 'Flood Level: None Detected';
+        detectionPanels.forEach(p => { p.style.display = 'none'; });
+        aiSummary.className = 'ai-summary ai-summary--info';
+        aiSummary.innerHTML =
+            `<i class="fa-solid fa-circle-info" style="margin-right:7px;"></i>` +
+            `The image check did <strong>not detect a flooded scene</strong>. ` +
+            `No flood coverage or water overlay has been assigned. ` +
+            `If this result is incorrect, use a clearer photo showing the affected area.`;
+    } else if (flood.status === 'candidate') {
+        floodPct.textContent = `${flood.cnn_flood_pct}% (estimate)`;
+        floodConf.textContent = 'Needs review';
+        floodSevBanner.className = 'severity-banner sev-none';
+        floodSevLabel.textContent = 'Possible Flooding — Review Needed';
+        detectionPanels.forEach(p => { p.style.display = 'none'; });
+        aiSummary.className = 'ai-summary ai-summary--warn';
+        aiSummary.innerHTML =
+            `<i class="fa-solid fa-triangle-exclamation" style="margin-right:7px;"></i>` +
+            `The water analysis found <strong>possible flooding</strong>, with an estimated ` +
+            `${flood.cnn_flood_pct}% water-like coverage. This estimate can also include objects ` +
+            `that resemble water and has not been independently confirmed. ` +
+            `Select the report type and severity based on actual conditions for staff review.`;
+    } else if (flood.status === 'uncertain') {
+        floodPct.textContent = '—';
+        floodConf.textContent = '—';
+        floodSevBanner.className = 'severity-banner sev-none';
+        floodSevLabel.textContent = 'AI Result: Inconclusive';
+        detectionPanels.forEach(p => { p.style.display = 'none'; });
+        aiSummary.className = 'ai-summary ai-summary--warn';
+        aiSummary.innerHTML =
+            `<i class="fa-solid fa-circle-info" style="margin-right:7px;"></i>` +
+            `The AI could not reliably assess this photo. This <strong>does not rule out flooding</strong>, ` +
+            `including grey or reflective floodwater. You can select the report type and severity ` +
+            `based on the actual conditions for staff review.`;
+    } else if (flood.false_positive) {
         // Override displayed stats so users don't see confusing % numbers
         floodPct.textContent  = '0%';
         floodConf.textContent = '—';
@@ -402,10 +440,13 @@ function renderResults(flood) {
 // ── Auto-fill form from AI results ────────────────────────
 function autoFillForm(flood) {
     const isLowConf  = flood.confidence < MIN_CONFIDENCE_FLOOD;
-    const isFlood    = !flood.false_positive && flood.flood_pct > MIN_FLOOD_PCT;
+    const isFlood    = flood.status === 'confirmed' || (!flood.false_positive && flood.flood_pct > MIN_FLOOD_PCT);
     const isConfirmedFlood = isFlood && !isLowConf;
 
-    if (isConfirmedFlood) {
+    const needsReview = flood.status === 'candidate' || flood.status === 'uncertain';
+    if (needsReview) {
+        unlockSeverity();
+    } else if (isConfirmedFlood) {
         typeSelect.value = 'Flood';
         const sevMap = { None: 'Low', Low: 'Low', Moderate: 'Moderate', High: 'Moderate', Severe: 'Severe' };
         lockSeverity(sevMap[flood.severity] || 'Moderate');
@@ -420,7 +461,7 @@ function autoFillForm(flood) {
     }
     // Re-validate after auto-fill
     validateDescription();
-    validationIssues.lowConfidence = (typeSelect.value === 'Flood') && isLowConf;
+    validationIssues.lowConfidence = (typeSelect.value === 'Flood') && isLowConf && !needsReview;
     updateWarningPanel();
 }
 
@@ -433,8 +474,8 @@ function validateDescription() {
 typeSelect.addEventListener('change', () => {
     if (aiFloodResult) {
         const isLowConf = aiFloodResult.confidence < MIN_CONFIDENCE_FLOOD;
-        const isFlood   = !aiFloodResult.false_positive && aiFloodResult.flood_pct >= MIN_FLOOD_PCT;
-        validationIssues.lowConfidence = (typeSelect.value === 'Flood') && isLowConf;
+        const needsReview = aiFloodResult.status === 'candidate' || aiFloodResult.status === 'uncertain';
+        validationIssues.lowConfidence = (typeSelect.value === 'Flood') && isLowConf && !needsReview;
         updateWarningPanel();
     }
 });

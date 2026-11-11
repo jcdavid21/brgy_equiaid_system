@@ -1,12 +1,32 @@
-"""Conservative spatial agreement for flood segmentation predictions."""
+"""Validate detector agreement without treating CNN disagreement as no flood."""
 
 import cv2
 import numpy as np
 
-CNN_PIXEL_THRESHOLD = 0.70
-YOLO_CONFIDENCE_THRESHOLD = 0.70
+CNN_PIXEL_THRESHOLD = 0.50
+YOLO_CONFIDENCE_THRESHOLD = 0.50
 MIN_MASK_IOU = 0.30
-MIN_FLOOD_COVERAGE = 12.0
+MIN_FLOOD_COVERAGE = 5.0
+MIN_CNN_SUPPORT = 0.30
+MIN_CNN_ESTIMATE_COVERAGE = 12.0
+
+
+def cnn_water_estimate(predictions):
+    """Preserve the original mean CNN coverage separately from confirmation.
+
+    The vote map allows an overlay to show partial model agreement without
+    presenting these segmentation scores as a calibrated flood classifier.
+    """
+    masks = [
+        probabilities >= CNN_PIXEL_THRESHOLD
+        for probabilities in predictions
+        if probabilities.ndim == 2 and np.isfinite(probabilities).all()
+    ]
+    if not masks:
+        raise ValueError('No valid CNN segmentation output')
+    votes = np.mean(masks, axis=0)
+    coverage = float(np.mean(votes) * 100)
+    return coverage, votes
 
 
 def flood_detections(result, shape):
@@ -14,7 +34,7 @@ def flood_detections(result, shape):
     mask = np.zeros(shape, dtype=np.uint8)
     indices = []
     confidences = []
-    if result.boxes is None or result.masks is None:
+    if result is None or result.boxes is None or result.masks is None:
         return mask.astype(bool), indices, confidences
 
     height, width = shape
@@ -42,25 +62,25 @@ def mask_iou(first, second):
 
 
 def confirmed_flood_mask(predictions, nano_mask, small_mask):
-    """Require both detectors and every available CNN to support the same region.
+    """Use agreeing YOLO masks, corroborated by at least one available CNN.
 
-    These are conservative inference defaults, not calibrated accuracy claims.
-    Coverage is measured only on pixels supported by all available models.
+    CNN support is measured within the detector region, rather than using IoU
+    against a potentially much larger CNN mask. A disagreeing auxiliary CNN must
+    not erase an otherwise supported detection. These scores are not calibrated.
     """
     empty = np.zeros(nano_mask.shape, dtype=bool)
     if not predictions or mask_iou(nano_mask, small_mask) < MIN_MASK_IOU:
         return empty
 
     detector_mask = nano_mask & small_mask
-    confirmed = detector_mask.copy()
+    supported = False
     for probabilities in predictions:
-        if probabilities.shape != confirmed.shape or not np.isfinite(probabilities).all():
-            return empty
+        if probabilities.shape != detector_mask.shape or not np.isfinite(probabilities).all():
+            continue
         cnn_mask = probabilities >= CNN_PIXEL_THRESHOLD
-        if mask_iou(cnn_mask, detector_mask) < MIN_MASK_IOU:
-            return empty
-        confirmed &= cnn_mask
+        if np.mean(cnn_mask[detector_mask]) >= MIN_CNN_SUPPORT:
+            supported = True
 
-    if np.mean(confirmed) * 100 < MIN_FLOOD_COVERAGE:
+    if not supported or np.mean(detector_mask) * 100 < MIN_FLOOD_COVERAGE:
         return empty
-    return confirmed
+    return detector_mask
