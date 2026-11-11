@@ -357,7 +357,7 @@ function renderResults(flood) {
         floodPct.textContent  = '0%';
         floodConf.textContent = '—';
         floodSevBanner.className = `severity-banner sev-none`;
-        floodSevLabel.textContent = 'Flood Level: None Detected';
+        floodSevLabel.textContent = 'Flood Level: Not Confirmed';
 
         // Hide the YOLO detection panels — boxes on clothing/objects are misleading
         detectionPanels.forEach(p => { p.style.display = 'none'; });
@@ -365,9 +365,10 @@ function renderResults(flood) {
         aiSummary.className  = 'ai-summary ai-summary--info';
         aiSummary.innerHTML  =
             `<i class="fa-solid fa-circle-info" style="margin-right:7px;"></i>` +
-            `The AI did <strong>not detect flooding</strong> in this photo. ` +
-            `Blue or dark areas were found (e.g. clothing, objects, sky) but are not consistent ` +
-            `with actual floodwater. Please confirm the details below before submitting.`;
+            `The AI could <strong>not confirm flooding</strong> in this photo. ` +
+            `The models did not find enough consistent floodwater evidence. ` +
+            `If there is flooding, upload a clearer photo showing the affected area. ` +
+            `Please confirm the details below before submitting.`;
     } else if (isLowConf && isFloodSig) {
         aiSummary.className  = 'ai-summary ai-summary--warn';
         aiSummary.innerHTML  =

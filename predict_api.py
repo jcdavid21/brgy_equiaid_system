@@ -18,6 +18,11 @@ import os
 import base64
 import traceback
 import threading
+from flood_validation import (
+    YOLO_CONFIDENCE_THRESHOLD,
+    confirmed_flood_mask,
+    flood_detections,
+)
 
 app = Flask(__name__)
 CORS(app)
@@ -50,7 +55,7 @@ def load_flood_cnn():
                 print(f'⚠ ResNet50 failed to load ({e}), using MobileNetV2 only', flush=True)
                 _models['flood_resnet'] = _models['flood_mbv2']
         else:
-            print('⚠ cnn_resnet50.keras missing/empty — using MobileNetV2 for both models', flush=True)
+            print('⚠ cnn_resnet50.keras missing/empty — using MobileNetV2 only', flush=True)
             _models['flood_resnet'] = _models['flood_mbv2']
     return _models['flood_mbv2'], _models['flood_resnet']
 
@@ -120,6 +125,8 @@ DAMAGE_SEVERITY_CONFIG = {
 
 def decode_image(file_storage):
     data = np.frombuffer(file_storage.read(), dtype=np.uint8)
+    if not data.size:
+        return None
     return cv2.imdecode(data, cv2.IMREAD_COLOR)
 
 def img_to_b64(img_rgb):
@@ -323,6 +330,8 @@ def predict_flood():
         return jsonify({'ok': False, 'error': 'No image uploaded'}), 400
     try:
         img_bgr  = decode_image(request.files['image'])
+        if img_bgr is None:
+            return jsonify({'ok': False, 'error': 'Invalid image uploaded'}), 400
         img_rgb  = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
         IMG_SIZE = 224
         img_r    = cv2.resize(img_rgb, (IMG_SIZE, IMG_SIZE))
@@ -330,41 +339,34 @@ def predict_flood():
 
         mbv2, resnet = load_flood_cnn()
         pred_mbv2    = mbv2.predict(inp,   verbose=0)[0, :, :, 0]
-        pred_resnet  = resnet.predict(inp, verbose=0)[0, :, :, 0]
+        predictions = [pred_mbv2]
+        if resnet is not mbv2:
+            predictions.append(resnet.predict(inp, verbose=0)[0, :, :, 0])
 
-        mask_mbv2   = (pred_mbv2   > 0.5).astype(np.uint8) * 255
-        mask_resnet = (pred_resnet > 0.5).astype(np.uint8) * 255
+        yolo_nano, yolo_small = load_yolo()
+        # Ultralytics accepts BGR arrays directly; no uploaded-image temp file needed.
+        res_nano = yolo_nano.predict(
+            img_bgr, imgsz=320, conf=YOLO_CONFIDENCE_THRESHOLD, verbose=False
+        )[0]
+        res_small = yolo_small.predict(
+            img_bgr, imgsz=320, conf=YOLO_CONFIDENCE_THRESHOLD, verbose=False
+        )[0]
+        nano_mask, nano_indices, nano_scores = flood_detections(res_nano, img_r.shape[:2])
+        small_mask, small_indices, small_scores = flood_detections(res_small, img_r.shape[:2])
+        confirmed_mask = confirmed_flood_mask(predictions, nano_mask, small_mask)
+        if confirmed_mask.any() and is_flood_false_positive(img_r, confirmed_mask):
+            confirmed_mask[:] = False
 
-        flood_pct_mbv2   = float(np.sum(mask_mbv2   > 0) / mask_mbv2.size   * 100)
-        flood_pct_resnet = float(np.sum(mask_resnet > 0) / mask_resnet.size * 100)
-        avg_flood_pct    = (flood_pct_mbv2 + flood_pct_resnet) / 2
-
-        false_positive_mbv2   = is_flood_false_positive(img_r, mask_mbv2)
-        false_positive_resnet = is_flood_false_positive(img_r, mask_resnet)
-        false_positive        = false_positive_mbv2 and false_positive_resnet
-
-        if false_positive:
-            avg_flood_pct    = 0.0
-            flood_pct_mbv2   = 0.0
-            flood_pct_resnet = 0.0
-        else:
-            if false_positive_mbv2:
-                flood_pct_mbv2 = 0.0
-            if false_positive_resnet:
-                flood_pct_resnet = 0.0
-            avg_flood_pct = (flood_pct_mbv2 + flood_pct_resnet) / 2
-            # One-model FP with low remaining average → treat as false positive.
-            if (false_positive_mbv2 or false_positive_resnet) and avg_flood_pct < 25.0:
-                false_positive   = True
-                avg_flood_pct    = 0.0
-                flood_pct_mbv2   = 0.0
-                flood_pct_resnet = 0.0
-
+        false_positive = not confirmed_mask.any()
+        avg_flood_pct = float(np.mean(confirmed_mask) * 100)
+        confidence = 0.0
         if not false_positive:
-            if min(flood_pct_mbv2, flood_pct_resnet) < 5.0 and avg_flood_pct < 10.0:
-                false_positive = True
-                avg_flood_pct  = 0.0
-                flood_pct_mbv2 = 0.0
+            # Model scores are evidence strength, not a calibrated flood probability.
+            confidence = min(
+                *(float(np.mean(pred[confirmed_mask])) for pred in predictions),
+                *nano_scores,
+                *small_scores,
+            )
 
         def flood_severity(pct):
             if pct < 12: return 'None'
@@ -376,54 +378,23 @@ def predict_flood():
         severity = flood_severity(avg_flood_pct)
 
         overlay = img_r.copy()
-        if not false_positive:
-            paint_mask = mask_resnet if false_positive_mbv2 else mask_mbv2
-            overlay[paint_mask > 0] = [30, 144, 255]
+        overlay[confirmed_mask] = [30, 144, 255]
         blended     = cv2.addWeighted(img_r, 0.55, overlay, 0.45, 0)
         overlay_b64 = img_to_b64(blended)
 
-        import tempfile, os as _os
-        yolo_nano, yolo_small = load_yolo()
+        def process_yolo_result(result, indices):
+            plotted = img_bgr if false_positive else result[indices].plot()
+            return img_to_b64(cv2.cvtColor(plotted, cv2.COLOR_BGR2RGB))
 
-        # Windows-safe: close the file before YOLO opens it
-        with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tmp:
-            tmp_path = tmp.name
-
-        try:
-            cv2.imwrite(tmp_path, img_bgr)
-            res_nano  = yolo_nano.predict(tmp_path,  imgsz=320, conf=0.5, verbose=False)
-            res_small = yolo_small.predict(tmp_path, imgsz=320, conf=0.5, verbose=False)
-        finally:
-            try:
-                _os.unlink(tmp_path)
-            except Exception:
-                pass
-
-        def process_yolo_result(result, orig_bgr):
-            plotted = result[0].plot()
-            h       = plotted.shape[0]
-            plotted[:int(h * 0.30), :] = cv2.resize(
-                orig_bgr, (plotted.shape[1], plotted.shape[0])
-            )[:int(h * 0.30), :]
-            rgb = cv2.cvtColor(plotted, cv2.COLOR_BGR2RGB)
-            _, buf = cv2.imencode('.png', cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR))
-            return base64.b64encode(buf).decode()
-
-        yolo_nano_b64  = process_yolo_result(res_nano,  img_bgr)
-        yolo_small_b64 = process_yolo_result(res_small, img_bgr)
-
-        yolo_conf = 0.0
-        if not false_positive:
-            if res_small[0].boxes is not None and len(res_small[0].boxes):
-                confs     = res_small[0].boxes.conf.cpu().numpy()
-                yolo_conf = float(np.mean(confs)) if len(confs) else 0.0
+        yolo_nano_b64 = process_yolo_result(res_nano, nano_indices)
+        yolo_small_b64 = process_yolo_result(res_small, small_indices)
 
         return jsonify({
             'ok':             True,
             'type':           'flood',
             'severity':       severity,
             'flood_pct':      round(avg_flood_pct, 1),
-            'confidence':     round(max(flood_pct_mbv2 / 100, yolo_conf), 3),
+            'confidence':     round(confidence, 3),
             'false_positive': false_positive,
             'overlay_b64':    overlay_b64,
             'yolo_nano_b64':  yolo_nano_b64,
