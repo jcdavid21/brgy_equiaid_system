@@ -52,6 +52,43 @@ The Barangay Equity Aid System is a full-stack web application that helps barang
 
 ## 🚀 Installation Guide
 
+### Local Docker setup (shared MySQL)
+
+The local Compose stack uses the existing `shared-mysql` service on the external
+`shared-db` network. It does not create or manage another database container.
+
+- Website: `http://localhost:8083`
+- Login: `http://localhost:8083/components/login.php`
+- AI API: `http://localhost:5001/health`
+
+Put the app-specific MySQL credentials in `.docker.env` (gitignored):
+
+```dotenv
+DB_USER=equiaid_local
+DB_PASS=your-local-app-password
+```
+
+The MySQL user needs access to `brgy_equiaid.*`. Import
+`database/brgy_equiaid.sql` only when initializing an empty database; it includes
+seed records. The initial local setup has already imported this file.
+
+```bash
+docker compose stop predict
+docker compose build
+docker compose run --rm --no-deps predict python flood_scene.py --download
+docker compose up -d
+docker compose ps
+docker compose logs --tail=50 predict
+docker compose stop
+```
+
+Source files and model weights are mounted from this checkout. PHP/JavaScript
+edits apply immediately; restart `predict` after Python changes. The first AI
+build downloads TensorFlow and YOLO dependencies and can take several minutes.
+Both published ports bind only to localhost. The web container uses
+`PREDICT_API_URL=http://predict:5001` for server-side AI requests, while browser
+requests use `http://localhost:5001`.
+
 ### Step 1: Install XAMPP
 
 1. Download and install XAMPP from https://www.apachefriends.org
@@ -115,14 +152,13 @@ mysql -u root
 3. **Install Required Packages**:
    ```bash
    pip install --upgrade pip
-   pip install flask flask-cors numpy opencv-python tensorflow keras ultralytics pandas
-   ```
-
-   Or if a `requirements.txt` exists:
-
-   ```bash
    pip install -r requirements.txt
+   python flood_scene.py --download
    ```
+
+   The download command prepares the additional local scene classifier. It is
+   required once on each machine before flood prediction; runtime requests use
+   the cached model and do not send uploaded images to an external service.
 
    **Key Python Packages**:
    - Flask: Web framework for API
@@ -340,6 +376,102 @@ GET http://localhost:5000/health
 
 ## 🔧 Troubleshooting
 
+### Flood false positives and inference validation
+
+The CNN segmentation models were trained to mark water pixels; their coverage
+alone cannot reliably distinguish a flooded scene from logos, clothing, or paper.
+`flood_scene.py` adds a separate, local
+[CLIP scene check](https://huggingface.co/openai/clip-vit-base-patch32) before
+returning any water estimate. It compares fixed flood-scene descriptions with
+logos, gatherings, protests, dry streets, normal bodies of water, pools, documents,
+and ordinary rain. A non-flood winner with a cosine-similarity margin of at least
+0.02 returns `status: non_flood`, zero coverage, and an unannotated image. A weak
+non-flood winner/tie is inconclusive. Flood-scene winners continue to the original
+CNN estimates and optional YOLO confirmation. These are zero-shot scene decisions,
+not calibrated probabilities or a guarantee of general accuracy.
+
+On a machine without Docker, install and prepare it with:
+
+```bash
+pip install -r requirements.txt
+python flood_scene.py --download
+python predict_api.py
+```
+
+The original flood weights are unchanged. Preparation downloads the additional
+official CLIP weights (about 600 MB), exports its vision encoder, caches the text
+features, and quantizes the vision matrix weights. The API uses only the local
+ONNX vision model (about 91 MB) and cached text vectors; it does not load the full
+CLIP PyTorch/text model alongside TensorFlow. `scene_pixel_values` reproduces the
+pinned processor's resize/crop/normalization, checked against the official processor.
+The quantized model was checked on the same real-image controls after conversion.
+
+All these artifacts live under `models/scene_models/`, which is gitignored.
+Push `flood_scene.py`, `prepare_flood_scene.py`, and `requirements.txt` alongside
+the prediction/validation/UI changes, then run the download command on the
+destination machine; do not commit the model cache. This preparation command
+reuses valid artifacts on subsequent runs. The model revision is pinned in the
+module. Missing dependencies/weights return an explicit 503 setup error rather
+than silently enabling unverified flood estimates again.
+
+`/predict/flood` uses both exported YOLO segmentation models at their native
+320×320 input size and both available 224×224 CNN segmentation models. YOLO
+detections must be labeled `Flood Water` (or `Flood`/`Floodwater`) and score at
+least 0.50. Their masks must overlap with an intersection-over-union of at least
+0.30. At least one CNN must mark 30% of this shared region as water at a 0.50 pixel
+threshold. Coverage is measured on the shared detector mask, with a 5% image-area
+floor to discard small object detections (which can include clothing). Flooding
+occupying less than this area also remains inconclusive. This floor is an
+inference default, not a validated classifier for water versus clothing.
+A disagreeing auxiliary CNN cannot erase the
+detector mask. Coverage alone never counts as confidence. Color/position rules
+are not used as definitive flood vetoes.
+
+For scenes accepted by the scene check, original mean CNN coverage at the 0.50
+pixel threshold is preserved in `cnn_flood_pct`. YOLO is additional confirmation,
+not a prerequisite for returning a CNN estimate. If confirmed detector agreement is absent and the CNN
+estimate reaches the original 12% coverage threshold, the API returns
+`status: candidate`, a weighted CNN overlay, and zero *confirmed* coverage and
+confidence. The interface shows “Possible Flooding — Review Needed” and the
+estimated coverage, with report type/severity available for manual review.
+This preserves flood candidates that were previously hidden by the YOLO gate.
+The scene check now rejects the supplied logo, gathering, and protest controls
+before calculating coverage, while retaining the supplied grey/muddy flood scenes.
+Additional independent evaluation is still needed for new types of scenes.
+
+Below the CNN estimate threshold, the status is `uncertain` and the interface
+shows “Inconclusive.” Both review states retain the legacy `severity: None` and
+`false_positive: true` fields; these fields do not prove the scene is non-flood.
+Confirmed predictions return `status: confirmed`. Confidence is the minimum of
+the strongest CNN mean score in the shared region and accepted detector scores;
+it is not a calibrated probability. A missing/failing YOLO dependency cannot
+disable an otherwise working CNN estimate.
+
+The initial all-model intersection rule at 0.70 rejected genuine floods. In the
+November 11, 2026 local audit, a muddy-water rescue photo produced YOLO scores of
+0.798 and 0.653; the 0.70 cutoff suppressed the second detection. A grey-water
+photo produced no YOLO detections even at 0.25. CNN agreement alone also marked
+a labeled dry aerial scene as water, so it is not a reliable automatic fallback.
+The [original training notebook](https://colab.research.google.com/drive/1dQj9t5h3wgai5d2pd17UawLn30NOoL8u)
+confirms that the existing models were trained with 224×224 RGB/255 inputs.
+The API retains this contract; changing to ImageNet normalization only during
+inference would not match that training pipeline. Notebook logs show 232 training
+and 58 validation records, zero YOLO background images, and validation mask recall
+around 0.44–0.46 in the shown best-model runs. These are limitations of the shown
+training/evaluation data, not evidence that the CNNs never detect floodwater.
+
+Model weights have not been retrained. Restoring the CNN estimates fixes the
+regression that hid their outputs; it does not solve their false positives.
+Reliable separation of real floodwater from logos, signs, and clothing still
+needs representative labeled flood/non-flood evaluation data.
+Evaluate original non-flood photos (including logos, indoor gatherings, clothing,
+and signs) alongside labeled flood photos before tuning thresholds or deploying.
+Synthetic regression tests check decision logic, not the trained models' accuracy:
+
+```bash
+python -m unittest discover -s tests -p 'test_flood*.py' -v
+```
+
 **Solution**:
 1. Ensure MySQL is running: `mysql -u root -p`
 2. Check database name in [backend/db.php](backend/db.php)
@@ -350,6 +482,49 @@ GET http://localhost:5000/health
 1. Ensure virtual environment is activated: `source venv/bin/activate`
 2. Install missing package: `pip install <package_name>`
 3. Check Python version: `python --version` (should be 3.12+)
+
+### Windows: certificate verification fails while downloading the scene model
+
+If `python flood_scene.py --download` fails with `CERTIFICATE_VERIFY_FAILED` or
+`unable to get local issuer certificate`, run these commands in the active venv:
+
+```powershell
+python -m pip install --upgrade pip certifi
+python -m pip install "pip-system-certs>=5.3,<6"
+python flood_scene.py --download
+python predict_api.py
+```
+
+`pip-system-certs` makes Python use the Windows certificate store while retaining
+TLS verification. It activates when the next Python process starts and is now
+included in `requirements.txt` for Windows installations. If verification still
+fails, check that the correct trusted root certificate for the network or HTTPS
+inspection software is installed in Windows. The issuing organization should
+provide that certificate; do not substitute an unverified certificate bundle.
+
+If a trusted machine has already prepared this exact scene model, an offline
+transfer avoids the download entirely. Copy these three generated files from
+its `models/scene_models/` directory into the same directory on Windows:
+`clip-vision-int8.onnx`, `scene-text-features.npy`, and `scene-model.json`.
+Include the upstream CLIP license when redistributing the model. The metadata
+must match the pinned model revision and prompts in `flood_scene.py`.
+Then run `python flood_scene.py` (without `--download`) to verify the local
+artifacts, followed by `python predict_api.py`. No Hugging Face connection is
+needed for these prepared scene artifacts during inference. This does not repair
+the Windows trust store; it provides an offline path to run the application.
+
+The prepared bundle is also available at
+`model-packages/equiaid-scene-model-offline.zip` for Git-based distribution. After
+pulling it, run these commands from the project root in the active Windows venv:
+
+```powershell
+Expand-Archive .\model-packages\equiaid-scene-model-offline.zip -DestinationPath .\models\scene_models -Force
+python flood_scene.py
+python predict_api.py
+```
+
+Commit the ZIP and its `.sha256` sidecar, not the extracted `models/scene_models/`
+directory. The ZIP contains the three prepared runtime files and the CLIP license.
 
 ### Issue: Flask API not starting
 **Solution**:
