@@ -189,9 +189,6 @@ $page_title = 'Login — Barangay EQUIAID';
                                     <input type="checkbox" name="remember" id="remember">
                                     Remember me
                                 </label>
-                                <a href="forgot-password.php" class="auth-forgot">
-                                    Forgot password?
-                                </a>
                             </div>
 
                             <button type="submit" class="btn-auth">
