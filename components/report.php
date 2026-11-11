@@ -332,7 +332,7 @@ $user_name = htmlspecialchars($_SESSION['user_name'] ?? 'Resident', ENT_QUOTES);
             <p>Your incident report has been received. Barangay staff have been notified and will respond shortly.</p>
             <div class="modal-ref">Report ID: <strong id="modal-report-id">—</strong></div>
             <div class="modal-actions">
-                <a href="my-reports.php" class="btn btn-primary">
+                <a href="my_reports.php" class="btn btn-primary">
                     <i class="fa-solid fa-list"></i> View My Reports
                 </a>
                 <button type="button" class="btn btn-outline" id="modal-close">

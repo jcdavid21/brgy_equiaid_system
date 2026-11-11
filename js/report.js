@@ -278,7 +278,6 @@ function resetUpload() {
     cardResult.hidden = true;
     aiSummary.textContent = '';
     aiSummary.style.background = '';
-    unlockSeverity();
     updateWarningPanel();
 }
 
@@ -444,20 +443,16 @@ function autoFillForm(flood) {
     const isConfirmedFlood = isFlood && !isLowConf;
 
     const needsReview = flood.status === 'candidate' || flood.status === 'uncertain';
-    if (needsReview) {
-        unlockSeverity();
-    } else if (isConfirmedFlood) {
+    if (!needsReview && isConfirmedFlood) {
         typeSelect.value = 'Flood';
         const sevMap = { None: 'Low', Low: 'Low', Moderate: 'Moderate', High: 'Moderate', Severe: 'Severe' };
-        lockSeverity(sevMap[flood.severity] || 'Moderate');
-    } else if (isFlood && isLowConf) {
+        setSeverity(sevMap[flood.severity] || 'Moderate');
+    } else if (!needsReview && isFlood && isLowConf) {
         // Detected something but confidence too low — don't auto-set Flood
         typeSelect.value = 'Other';
-        lockSeverity('Low');
-    } else if (flood.false_positive) {
-        lockSeverity('Low');   // non-flood image — lock at Low, user shouldn't inflate this
-    } else {
-        lockSeverity('Low');   // no significant flood detected
+        setSeverity('Low');
+    } else if (!needsReview) {
+        setSeverity('Low');
     }
     // Re-validate after auto-fill
     validateDescription();
@@ -481,11 +476,7 @@ typeSelect.addEventListener('change', () => {
 });
 
 // ── Severity picker ───────────────────────────────────────
-// ── Severity lock (set by AI; user cannot override after analysis) ───────
-let severityLockedByAI = false;
-
 severityPicker.addEventListener('click', e => {
-    if (severityLockedByAI) return;   // ignore clicks when AI has locked it
     const btn = e.target.closest('.sp-btn');
     if (!btn) return;
     setSeverity(btn.dataset.val);
@@ -496,43 +487,6 @@ function setSeverity(val) {
         b.classList.toggle('active', b.dataset.val === val);
     });
     fSeverity.value = val;
-}
-
-function lockSeverity(val) {
-    setSeverity(val);
-    severityLockedByAI = true;
-    severityPicker.style.opacity    = '0.65';
-    severityPicker.style.cursor     = 'not-allowed';
-    severityPicker.title = 'Severity is set by the AI analysis and cannot be changed manually.';
-    document.querySelectorAll('.sp-btn').forEach(b => {
-        b.style.pointerEvents = 'none';
-    });
-
-    // Show a small lock notice if not already there
-    let notice = document.getElementById('sev-lock-notice');
-    if (!notice) {
-        notice = document.createElement('p');
-        notice.id = 'sev-lock-notice';
-        notice.style.cssText =
-            'margin:4px 0 0 0; font-size:0.78rem; color:#6b7280; display:flex; align-items:center; gap:5px;';
-        severityPicker.parentElement.appendChild(notice);
-    }
-    notice.innerHTML =
-        '<i class="fa-solid fa-lock" style="color:#9ca3af;"></i>' +
-        ' Severity is determined by the AI result and cannot be changed manually.';
-    notice.hidden = false;
-}
-
-function unlockSeverity() {
-    severityLockedByAI = false;
-    severityPicker.style.opacity     = '';
-    severityPicker.style.cursor      = '';
-    severityPicker.title             = '';
-    document.querySelectorAll('.sp-btn').forEach(b => {
-        b.style.pointerEvents = '';
-    });
-    const notice = document.getElementById('sev-lock-notice');
-    if (notice) notice.hidden = true;
 }
 
 // ── Geolocation (auto on page load) ──────────────────────
